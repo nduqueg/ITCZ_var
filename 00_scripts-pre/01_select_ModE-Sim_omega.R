@@ -69,4 +69,16 @@ cdo.cmd <- paste0("cdo zonmean ",dir.base,"set_1850-1_to_2/abs/ensstat/by_var/mo
                   "ModE-Sim_set_1850-1_to_2_Omega500hPa-ZonMean_1850-2009_mon.nc")
 system(cdo.cmd)
 
+cdo.cmd <- "cdo seasmean ModE-Sim_set_1420-1_to_3_Omega500hPa-ZonMean_1420-1849_mon.nc ModE-Sim_set_1420-1_to_3_Omega500hPa-ZonMean_1420-1849_seasonal.nc"
+system(cdo.cmd)
+cdo.cmd <- "cdo selseas,DJF ModE-Sim_set_1420-1_to_3_Omega500hPa-ZonMean_1420-1849_seasonal.nc ModE-Sim_set_1420-1_to_3_Omega500hPa-ZonMean_1420-1849_sDJF.nc"
+system(cdo.cmd)
+cdo.cmd <- "cdo selseas,JJA ModE-Sim_set_1420-1_to_3_Omega500hPa-ZonMean_1420-1849_seasonal.nc ModE-Sim_set_1420-1_to_3_Omega500hPa-ZonMean_1420-1849_sJJA.nc"
+system(cdo.cmd)
 
+cdo.cmd <- "cdo seasmean ModE-Sim_set_1850-1_to_2_Omega500hPa-ZonMean_1850-2009_mon.nc ModE-Sim_set_1850-1_to_2_Omega500hPa-ZonMean_1850-2009_seasonal.nc"
+system(cdo.cmd)
+cdo.cmd <- "cdo selseas,DJF ModE-Sim_set_1850-1_to_2_Omega500hPa-ZonMean_1850-2009_seasonal.nc ModE-Sim_set_1850-1_to_2_Omega500hPa-ZonMean_1850-2009_sDJF.nc"
+system(cdo.cmd)
+cdo.cmd <- "cdo selseas,JJA ModE-Sim_set_1850-1_to_2_Omega500hPa-ZonMean_1850-2009_seasonal.nc ModE-Sim_set_1850-1_to_2_Omega500hPa-ZonMean_1850-2009_sJJA.nc"
+system(cdo.cmd)

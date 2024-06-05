@@ -88,4 +88,17 @@ system(cdo.cmd)
 cdo.cmd <- "cdo ensmean ./set_1850-1/*.nc ./set_1850-2/*.nc ModE-Sim_set_1850-1_to_2_ensmean_mastrf_1850-2009_mon.nc"
 system(cdo.cmd)
 
+cdo.cmd <- "cdo seasmean ModE-Sim_set_1420-1_to_3_ensmean_mastrf_1420-1849_mon.nc ModE-Sim_set_1420-1_to_3_ensmean_mastrf_1420-1849_seasonal.nc"
+system(cdo.cmd)
+cdo.cmd <- "cdo selseas,DJF ModE-Sim_set_1420-1_to_3_ensmean_mastrf_1420-1849_seasonal.nc ModE-Sim_set_1420-1_to_3_ensmean_mastrf_1420-1849_sDJF.nc"
+system(cdo.cmd)
+cdo.cmd <- "cdo selseas,JJA ModE-Sim_set_1420-1_to_3_ensmean_mastrf_1420-1849_seasonal.nc ModE-Sim_set_1420-1_to_3_ensmean_mastrf_1420-1849_sJJA.nc"
+system(cdo.cmd)
+
+cdo.cmd <- "cdo seasmean ModE-Sim_set_1850-1_to_2_ensmean_mastrf_1850-2009_mon.nc ModE-Sim_set_1850-1_to_2_ensmean_mastrf_1850-2009_seasonal.nc"
+system(cdo.cmd)
+cdo.cmd <- "cdo selseas,DJF ModE-Sim_set_1850-1_to_2_ensmean_mastrf_1850-2009_seasonal.nc ModE-Sim_set_1850-1_to_2_ensmean_mastrf_1850-2009_sDJF.nc"
+system(cdo.cmd)
+cdo.cmd <- "cdo selseas,JJA ModE-Sim_set_1850-1_to_2_ensmean_mastrf_1850-2009_seasonal.nc ModE-Sim_set_1850-1_to_2_ensmean_mastrf_1850-2009_sJJA.nc"
+system(cdo.cmd)
 
