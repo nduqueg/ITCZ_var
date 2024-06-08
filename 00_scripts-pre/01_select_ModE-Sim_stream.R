@@ -6,7 +6,8 @@ library(doSNOW)
 library(tcltk)
 "%>%"=magrittr::`%>%`
 
-dir.base <- "/mnt/climstor/ERC_PALAEO/ModE-Sim/outdata/"
+source("00_settings.R")
+# dir.base.ModEsim <- "/mnt/climstor/ERC_PALAEO/ModE-Sim/outdata/"
 
 ## generate names in ModE-Sim data ----
 
@@ -33,7 +34,7 @@ Epoch <- list(Epoch1 = seq(1420,1849), Epoch2= seq(1850,2009))
 ## fetch Meridional streamflow ----
 
 l.rerun <- c()
-setwd("../01_Data/01_Streamfunction/")
+setwd(paste0(dir.base,"/01_Data/01_Streamfunction/"))
 for ( i in 1:nrow(sets)){
 
   # creating the directories and temporal directories
@@ -102,3 +103,4 @@ system(cdo.cmd)
 cdo.cmd <- "cdo selseas,JJA ModE-Sim_set_1850-1_to_2_ensmean_mastrf_1850-2009_seasonal.nc ModE-Sim_set_1850-1_to_2_ensmean_mastrf_1850-2009_sJJA.nc"
 system(cdo.cmd)
 
+setwd(dir.base)

@@ -6,7 +6,8 @@ library(doSNOW)
 library(tcltk)
 "%>%"=magrittr::`%>%`
 
-dir.base <- "/mnt/climstor/ERC_PALAEO/ModE-Sim/outdata/"
+source("00_settings.R")
+# dir.base.ModEsim <- "/mnt/climstor/ERC_PALAEO/ModE-Sim/outdata/"
 
 ## generate names in ModE-Sim data ----
 
@@ -37,7 +38,7 @@ Epoch <- list(Epoch1 = seq(1420,1849), Epoch2= seq(1850,2009))
 # set_1420-1/abs/m001/by_var/mon
 
 # calculate the zonal mean
-setwd("../01_Data/02_Omega500/")
+setwd(paste0(dir.base,"./01_Data/02_Omega500/"))
 numCores <- 5
 cl <- makeSOCKcluster(numCores)
 registerDoSNOW(cl)
@@ -82,3 +83,5 @@ cdo.cmd <- "cdo selseas,DJF ModE-Sim_set_1850-1_to_2_Omega500hPa-ZonMean_1850-20
 system(cdo.cmd)
 cdo.cmd <- "cdo selseas,JJA ModE-Sim_set_1850-1_to_2_Omega500hPa-ZonMean_1850-2009_seasonal.nc ModE-Sim_set_1850-1_to_2_Omega500hPa-ZonMean_1850-2009_sJJA.nc"
 system(cdo.cmd)
+
+setwd(dir.base)
