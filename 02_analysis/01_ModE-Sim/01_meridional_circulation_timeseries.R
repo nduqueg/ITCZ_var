@@ -9,6 +9,9 @@ library(ggplot2)
 library(metR)
 library(RColorBrewer)
 
+source("00_settings.R")
+setwd(dir.base)
+
 ### Dates ----
 Dates <- list()
 Dates$all <- seq(as.Date("1420-01-01"), as.Date("2009-12-01"), by="year")
@@ -33,12 +36,12 @@ mastrf$ep2$DJF <- ncvar_get(f, varid="mastrfu") %>% .[,, -(length(Dates$ep2)+1)]
 f <- nc_open("./01_Data/01_Streamfunction/ModE-Sim_set_1850-1_to_2_ensmean_mastrf_1850-2009_sJJA.nc")
 mastrf$ep2$JJA <- ncvar_get(f, varid="mastrfu")
 
-
+################################-
 # Mid tropospheric calculations ----
+################################-
 
-################################-
+
 #######   find mid-tropospheric values
-################################-
 
 MidT.mastrf <-list()
 for( i in c("ep1","ep2")){ # two time periods
@@ -52,10 +55,10 @@ for( i in c("ep1","ep2")){ # two time periods
   }
   )
 }
+save(MidT.mastrf, file="./01_Data/01_Streamfunction/ModE-Sim_mastrf_300-700hPa_ensmean_1420-2009.RData")
 
-################################-
+
 #######   find features of the ITCZ
-################################-
 
 Mastrf.prop <- list()
 for( i in c("ep1","ep2")){ # two time periods
@@ -77,18 +80,25 @@ for( i in c("ep1","ep2")){ # two time periods
     })
 }
 
+################################-
 ## plotting features timeseries ----
+################################-
+
 Mastrf.prop.g <- Mastrf.prop %>% reshape::melt(., id=c("Year"))
 
 Mastrf.prop.g %>% subset(.,variable %in% c("Max","Max.lat","Min","Min.lat")) %>%
   ggplot(., aes(x= Year, y= value)) +
   facet_grid(variable ~ L2, switch="y", scales="free_y")+
-  geom_line()+ scale_x_date(date_breaks = "50 years", date_labels = "%Y")+
+  geom_line()+ 
+  scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
+                            date_labels = "%Y")+
   theme_bw()
 
 Mastrf.prop.g %>% subset(.,variable %in% c("width","Area","strength")) %>%
   ggplot(., aes(x= Year, y= value)) +
   facet_grid(variable ~ L2, switch="y", scales="free_y")+
-  geom_line()+scale_x_date(date_breaks = "50 years", date_labels = "%Y")+
+  geom_line()+
+  scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
+               date_labels = "%Y")+
   theme_bw()
 
