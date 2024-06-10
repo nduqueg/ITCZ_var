@@ -37,7 +37,44 @@ f <- nc_open("./01_Data/01_Streamfunction/ModE-Sim_set_1850-1_to_2_ensmean_mastr
 mastrf$ep2$JJA <- ncvar_get(f, varid="mastrfu")
 
 ################################-
-# Mid tropospheric calculations ----
+# Mean general circulation ----
+################################-
+
+mastrf.longTerm <-list()
+for( i in c("ep1","ep2")){ # two time periods
+  
+  mastrf.longTerm[[i]] <- mastrf[[i]] %>% 
+    lapply(., function(x, lat){
+      y <- apply(x, c(1,2), mean)  # average time
+      colnames(y) <- lev/100
+      y <- cbind.data.frame(lat, y)
+      return(y)
+    },  lat)
+}
+
+########   plotting general circulation -
+
+mastrf.longTerm.g <- mastrf.longTerm %>% reshape::melt(., id="lat") %>%
+  within(., {
+    variable <- as.numeric(as.character(variable))
+    value <-  value / 1e9
+  })
+
+range <- with(mastrf.longTerm.g, max(abs(min(value)),max(value)) %>% round(., 2))
+
+ggplot() + facet_grid( L1 ~ L2, switch="y" )+
+  geom_contour_fill(data= mastrf.longTerm.g, aes(x= lat, y= variable, z= value))+ # ,breaks=MakeBreaks(binwidth=3*10^8, exclude=0)
+  scale_fill_stepsn(colours=brewer.pal(11,"RdBu"), breaks=seq(-range,range, length.out=12) %>% round(.,2),limits=c(-range,range), name = "Mass Str F [GKg/s]",
+                    guide=guide_colorsteps(even.steps = T,barheight=unit(10,"cm")))+
+  # geom_contour(data= mastrf.longTerm.g %>% subset(., value>=0), aes(x= lat, y= variable, z= value), col="blue")+
+  # geom_contour(data= mastrf.longTerm.g %>% subset(., value<=0), aes(x= lat, y= variable, z= value), col="red")+
+  scale_y_continuous(trans= metR::reverselog_trans())+
+  scale_x_continuous(breaks = seq(-90,90,by=15))+
+  labs(x="Latitude [°]", y="Level [hPa]", title = "Mass Streamfunction - ModE-Sim ensamble mean")+
+  theme_bw()
+
+################################-
+# Mid tropospheric calculations & ITCZ features ----
 ################################-
 
 
@@ -61,23 +98,24 @@ save(MidT.mastrf, file="./01_Data/01_Streamfunction/ModE-Sim_mastrf_300-700hPa_e
 #######   find features of the ITCZ
 
 Mastrf.prop <- list()
+trop.fil <- data.frame(DJF=lat>=-30 & lat <= 30, JJA=lat>=-25 & lat <= 40)
+
 for( i in c("ep1","ep2")){ # two time periods
-  
-  Mastrf.prop[[i]] <- MidT.mastrf[[i]] %>% 
+  for (j in seasons){
     
-    lapply(., function(x){ # over each season ( DJF & JJA )
-      
-      max.min.df <- data.frame(Year = index(x),
-                               Max = apply(x, 1, max), Max.lat = apply(x, 1, which.max) %>% lat[.],
-                               Min = apply(x, 1, min), Min.lat = apply(x, 1, which.min) %>% lat[.]
-                               ) %>% 
-        within(.,
-               { width <- abs( Max.lat - Min.lat )
-               Area <- abs( 2* pi *( 6371*10^3 )^2* (sin(Max.lat * pi/180) - sin(Min.lat * pi/180)) ) # radious of the earth
-               strength <- abs( -9.8*(Max - Min)/Area ) # gravity
-               })
-      
-    })
+    x <- MidT.mastrf[[i]][[j]] %>% 
+      .[, trop.fil[,j]] # filtering the tropics
+    
+    Mastrf.prop[[i]][[j]] <- data.frame(Year = index(x),
+                                        Max = apply(x, 1, max), lat.Max = apply(x, 1, which.max) %>% lat[ trop.fil[,j] ][.],
+                                        Min = apply(x, 1, min), lat.Min = apply(x, 1, which.min) %>% lat[ trop.fil[,j] ][.]
+    ) %>% 
+      within(.,
+             { width <- abs( lat.Max - lat.Min )
+             Area <- abs( 2* pi *( 6371e3 )^2* (sin(lat.Max * pi/180) - sin(lat.Min * pi/180)) ) # radious of the earth
+             strength <- abs( -9.8*(Max - Min)/Area ) # gravity
+             })
+  }
 }
 
 ################################-
@@ -86,19 +124,21 @@ for( i in c("ep1","ep2")){ # two time periods
 
 Mastrf.prop.g <- Mastrf.prop %>% reshape::melt(., id=c("Year"))
 
-Mastrf.prop.g %>% subset(.,variable %in% c("Max","Max.lat","Min","Min.lat")) %>%
+Mastrf.prop.g %>% subset(.,variable %in% c("Max","lat.Max","Min","lat.Min")) %>%
   ggplot(., aes(x= Year, y= value)) +
   facet_grid(variable ~ L2, switch="y", scales="free_y")+
   geom_line()+ 
   scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
                             date_labels = "%Y")+
+  labs(title="ModE-Sim Ens. Mean Mass Streamfunction")+
   theme_bw()
 
-Mastrf.prop.g %>% subset(.,variable %in% c("width","Area","strength")) %>%
+Mastrf.prop.g %>% subset(.,variable %in% c("strength","Area","width")) %>%
   ggplot(., aes(x= Year, y= value)) +
   facet_grid(variable ~ L2, switch="y", scales="free_y")+
   geom_line()+
   scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
                date_labels = "%Y")+
+  labs(title="ModE-Sim Ens. Mean Mass Streamfunction")+
   theme_bw()
 
