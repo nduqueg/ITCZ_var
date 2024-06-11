@@ -92,7 +92,7 @@ for( i in c("ep1","ep2")){ # two time periods
   }
   )
 }
-save(MidT.mastrf, file="./01_Data/01_Streamfunction/ModE-Sim_mastrf_300-700hPa_ensmean_1420-2009.RData")
+save(MidT.mastrf, file="./01_Data/01_Streamfunction/ModE-Sim_mastrf_300-700hPa_ensmean_1-to-3_1420-2009.RData")
 
 
 #######   find features of the ITCZ
