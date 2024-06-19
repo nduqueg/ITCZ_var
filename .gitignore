@@ -3,6 +3,6 @@
 .RData
 .Ruserdata
 
-*.nc
+*_mon.nc
 
-pre-Figures/
+# pre-Figures/
