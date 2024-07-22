@@ -66,6 +66,6 @@ system(cdo.cmd)
 cdo.cmd <- "cdo selseas,JJA ModE-RA_lowres_20mem_Set_1420-3_1850-1_Omega500hPa-ZonMean_1421-2008_seasonal.nc ModE-RA_lowres_20mem_Set_1420-3_1850-1_Omega500hPa-ZonMean_1421-2008_sJJA.nc"
 system(cdo.cmd)
 
-
+setwd("../..")
 
 
