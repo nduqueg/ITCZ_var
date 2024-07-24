@@ -90,7 +90,7 @@ close(pb)
 # save(Omega, file="./01_Data/02_Omega500/_allMemb_Omega500hPa.Rdata")
 
 ################################-
-# DJF & JJA ----
+# DJF & JJA aggregation ----
 ################################-
 Omega.s <- list()
 
@@ -123,58 +123,27 @@ stopCluster(cl)
 ################################-
 # Strong ascent ----
 ################################-
-load("./01_Data/02_Omega500/_allMemb_Omega500hPa_DJFJJA.Rdata")
-smt.min.max <- function(x,type, lat){
-  # 'x' is the Omega at 500 hPa, which will be smoothed around the minimum with an spline curve and 
-  # the position of its minimum will be also identified
-  lat.f <- lat[lat >= -45 & lat <= 45]
-  
-  aprox <- x[,lat >= -45 & lat <= 45] %>% apply(.,1, paste0("which.",type) %>% get()) %>% as.numeric()
-  
-  ind.aprox <- cbind(aprox-3,aprox-2,aprox-1,aprox,aprox+1,aprox+2,aprox+3) %>% t() %>% as.data.frame() # indices of values close to the Max StrFunct for the Spline model
-  lat.models <- apply(ind.aprox, 2, function(ind,lat) lat[ind], lat.f) %>%  as.data.frame() # latitudes for the Spline model
-  
-  data.spModel <- mapply(FUN= function(x,ind) x[ind], # extracts the MAx StrFunct values near the Max for the Spline model
-                         x[,lat >= -45 & lat <= 45] %>% as.matrix() %>% split(.,row(.)), 
-                         ind.aprox,
-                         SIMPLIFY = F) %>% 
-    
-    mapply(function(y,lat) cbind.data.frame(lat,y), # paste for each time step the latitude and the values near the Max StrFunc
-           .,
-           lat.models, 
-           SIMPLIFY = F) %>% 
-    lapply(., `colnames<-`,c("x.mod","y.mod"))
-  
-  sp.models <- lapply(data.spModel, function(x) tryCatch( # there are some months that don't have values
-    {lm(y.mod ~ splines::ns(x.mod,3), data= x)},
-    error= function(cond){NA}
-  )
-  )
-  pos.mastrf <- numeric()
-  for(k in 1:length(sp.models)){ # for each year identify the position of the Strong Ascent
-    
-    if (is.list(sp.models[[k]])){
-      
-    pos.mastrf[k] <- predict(sp.models[[k]], newdata = data.frame(x.mod= seq(lat.models[7,k],lat.models[1,k],by=0.1))) %>% as.numeric(.) %>% matrix(.,nrow=1) %>% 
-      apply(.,1,get(paste0("which.",type))) %>% 
-      seq(lat.models[7,k],lat.models[1,k],by=0.1)[.]
-    
-    } else{
-      pos.mastrf[k] <- NA
-    }
-  }
-  return(pos.mastrf)
-}
+# load("./01_Data/02_Omega500/_allMemb_Omega500hPa_DJFJJA.Rdata")
 
-min.max.memb <- function(y, lat){
+# the function for identifying the ITCZ feature' location, based on smoothing spline, is loaded with the settings file (00_settings.R)
+
+# function for calculating the feature for both seasons with the smoothing spline
+min.max.memb <- function(y, lat, feature ="loc"){
   
   Memb <- list()
-  Memb[["DJF"]] <- smt.min.max(y[["DJF"]], "min", lat)
-  Memb[["JJA"]] <- smt.min.max(y[["JJA"]], "min", lat)
+  if (feature =="loc"){
+    Memb[["DJF"]] <- smt.min.max(y[["DJF"]], "min", lat)
+    Memb[["JJA"]] <- smt.min.max(y[["JJA"]], "min", lat)  
+  } else if(feature == "Str"){
+    Memb[["DJF"]] <- apply(y[["DJF"]], 1, min)
+    Memb[["JJA"]] <- apply(y[["JJA"]], 1, min)
+  }
+  
   
   return(Memb)
 }
 
+loc.strAsc <- list()
 strAsc <- list()
 Dates$ep1 <- seq(as.Date("1420-01-01"), as.Date("1849-12-01"), by="year")
 Dates$ep2 <- seq(as.Date("1850-01-01"), as.Date("2009-12-01"), by="year")
@@ -186,40 +155,149 @@ for( i in names(Omega.s)){ # two time periods
   
   cl <- makeCluster(20)
   registerDoParallel(cl)
-  strAsc[[i]] <- mclapply(Omega.s[[i]], min.max.memb, lat)
+  loc.strAsc[[i]] <- mclapply(Omega.s[[i]], min.max.memb, lat, "loc")
+  strAsc[[i]] <- mclapply(Omega.s[[i]], min.max.memb, lat, "Str")
   stopCluster(cl)
   
   Epoch <- with (sets, Epoch[i==Set][1])
   if (i=="ModE-RA") Epoch <- "ModERA" else Epoch <- paste0("ep",Epoch)
   
-  strAsc[[i]] <- lapply(strAsc[[i]], 
+  loc.strAsc[[i]] <- lapply(loc.strAsc[[i]], 
                         function(x,dates){ y <- as.data.frame(x); z <- cbind.data.frame(dates,y);return(z)},
                         Dates[[Epoch]])
+  strAsc[[i]] <- lapply(strAsc[[i]], 
+                            function(x,dates){ y <- as.data.frame(x); z <- cbind.data.frame(dates,y);return(z)},
+                            Dates[[Epoch]])
 }
 
-save(strAsc,file="./01_Data/02_Omega500/_allMemb_position.Rdata")
+save(loc.strAsc,file="./01_Data/02_Omega500/_allMemb_LocStrAsc.Rdata")
+save(strAsc,file="./01_Data/02_Omega500/_allMemb_StrAsc.Rdata")
 
 ################################-
 ## plotting features timeseries ----
 ################################-
+load("./01_Data/02_Omega500/_allMemb_LocStrAsc.Rdata")
+load("./01_Data/02_Omega500/_allMemb_StrAsc.Rdata")
 
-Omega.prop.g <- strAsc %>% reshape::melt(., id=c("dates")) %>% 
-  dplyr::group_by(., L1, dates, variable) %>%
+Omega.loc.g <- loc.strAsc %>% reshape::melt(., id=c("dates")) %>% magrittr::set_colnames(., c("dates","Season","value","Memb","Dataset")) %>% 
+  dplyr::group_by(., Dataset, dates, Season) %>%
   dplyr::summarise(p5= quantile(value, probs = 0.05, na.rm = T),
                   p95=quantile(value, probs= 0.95, na.rm = T),
                   min= min(value, na.rm = T),
                   max= max(value, na.rm = T)) %>% 
-  as.data.frame()
+  as.data.frame() %>% within(., Dataset <- factor(Dataset, levels=unique(sets$Set)))
 
 palette <- brewer.pal(9, "Set1")[-c(6:8)]
-Omega.prop.g %>%
-  ggplot(., aes(x= dates, fill=L1)) +
-  facet_wrap(. ~ variable, scales = "free_y",ncol=1)+
+Omega.loc.g %>%
+  ggplot(., aes(x= dates, fill=Dataset)) +
+  facet_wrap(. ~ Season, scales = "free_y",ncol=1)+
   geom_ribbon(aes(ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
   scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
                             date_labels = "%Y", expand=c(0.01,0.01))+
-  labs(title="Position Strong Ascent [Omega 500 hPa] Ens. Memb.", y="Latitude [°]")+
+  labs(title="Position Strong Ascent [Min. Omega 500 hPa] Ens. Memb.", y="Latitude [°]")+
   theme_bw()+theme(legend.position = c(0.2,0.1), legend.direction = "horizontal",
+                   panel.grid = element_line(linetype="dashed",color="lightgrey"),
                    axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
 
+Omega.str.g <- strAsc %>% reshape::melt(., id=c("dates")) %>% magrittr::set_colnames(., c("dates","Season","value","Memb","Dataset")) %>% 
+  within(., {  
+    Dataset <- factor(Dataset, levels=unique(sets$Set))
+    value <- value*100
+    }) %>% 
+  dplyr::group_by(., Dataset, dates, Season) %>%
+  dplyr::summarise(p5= quantile(value, probs = 0.05, na.rm = T),
+                   p95=quantile(value, probs= 0.95, na.rm = T),
+                   min= min(value, na.rm = T),
+                   max= max(value, na.rm = T)) %>% 
+  as.data.frame()
 
+Omega.str.g %>%
+  ggplot(., aes(x= dates, fill=Dataset)) +
+  facet_wrap(. ~ Season, scales = "free_y",ncol=1)+
+  geom_ribbon(aes(ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
+  scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
+               date_labels = "%Y", expand=c(0.01,0.01))+
+  scale_y_continuous(transform = "reverse")+
+  labs(title="Strong Ascent [Min. Omega 500 hPa] Ens. Memb.", y="Omega 500 hPa [hPa/s]")+
+  theme_bw()+theme(legend.position = c(0.2,0.5), legend.direction = "horizontal",legend.background = element_rect(color = "black"),
+                   panel.grid = element_line(linetype="dashed",color="lightgrey"),
+                   axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+
+################################-
+## probability distribution of each sub-ensemble ----
+################################-
+
+Omega.str.g <- strAsc %>% reshape::melt(., id=c("dates")) %>% magrittr::set_colnames(., c("dates","Season","value","Memb","Dataset")) %>% 
+  within(., {  
+    Dataset <- factor(Dataset, levels=unique(sets$Set))
+    value <- value*100
+  }) %>% dplyr::group_by(., Dataset, dates, Season) %>%
+  dplyr::reframe(omega=density(value, na.rm=T)$x, pdf= density(value, na.rm=T)$y, 
+                 normal= shapiro.test(value)$p.value >0.05)
+
+Omega.str.g %>%
+  subset(.,Season=="DJF" & Dataset=="set_1420-1" ) %>% 
+  ggplot(., aes(x= dates, y= omega, color=pdf)) +
+  facet_wrap(. ~ Dataset, scales = "free_y",ncol=1)+
+  
+  geom_point(size=0.5)+
+  scale_color_gradient(low="#ffffcc",high="#800026")+
+  
+  scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
+               date_labels = "%Y", expand=c(0.01,0.01))+
+  scale_y_continuous(transform = "reverse")+
+  labs(title="Strong Ascent [Omega 500 hPa] Ens. Memb.", y="Omega 500 hPa [hPa/s]")+
+  theme_bw()+theme(legend.position ="bottom", legend.direction = "horizontal",legend.background = element_rect(color = "black"),
+                   panel.grid = element_line(linetype="dashed",color="lightgrey"),
+                   axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+
+Omega.str.g %>%
+  ggplot(.,aes(x=dates,y=Dataset,fill=normal))+
+  facet_wrap(.~Season, ncol=1)+
+  geom_tile()+
+  scale_fill_manual(values=c("red","blue"))+
+  scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
+               date_labels = "%Y", expand=c(0.01,0.01))+
+  labs(title="Normal dist. in Strong Ascent [Omega 500 hPa] Ens. Memb.", y="Subset")+
+  theme_bw()+theme(legend.position ="bottom", legend.direction = "horizontal",legend.background = element_rect(color = "black"),
+                   panel.grid = element_line(linetype="dashed",color="lightgrey"),
+                   axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+
+################################-
+## probability distribution of all the ensemble ----
+################################-
+
+ModE_Sim.normality <- strAsc %>% reshape::melt(., id=c("dates")) %>% magrittr::set_colnames(., c("dates","Season","value","Memb","Dataset")) %>% 
+  within(., {  
+    Dataset <- factor(Dataset, levels=unique(sets$Set))
+    value <- value*100
+  }) %>% subset(., Dataset!="ModE-RA") %>% 
+  dplyr::group_by(., dates, Season) %>%
+  dplyr::reframe(omega=density(value, na.rm=T)$x, pdf= density(value, na.rm=T)$y, 
+                 normal= shapiro.test(value)$p.value >0.05)
+
+ModE_Sim.normality %>% 
+  ggplot(.,aes(x=dates,y=Season,fill=normal))+
+  geom_tile()+
+  scale_fill_manual(values=c("red","blue"))+
+  scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
+               date_labels = "%Y", expand=c(0.01,0.01))+
+  scale_y_discrete(limits=rev(levels(ModE_Sim.normality$Season)))+
+  labs(title="Normal dist. in Strong Ascent [Min. Omega 500 hPa] All Ens. Memb.", y="Subset")+
+  theme_bw()+theme(legend.position ="bottom", legend.direction = "horizontal",legend.background = element_rect(color = "black"),
+                   panel.grid = element_line(linetype="dashed",color="lightgrey"),
+                   axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+
+ModE_Sim.normality %>%
+  ggplot(., aes(x= dates, y= omega, color=pdf)) +
+  facet_wrap(. ~ Season, scales = "free_y",ncol=1)+
+  geom_point(size=0.1)+
+  scale_color_gradient(low="#ffffcc",high="#800026")+
+  
+  scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
+               date_labels = "%Y", expand=c(0.01,0.01))+
+  scale_y_continuous(transform = "reverse")+
+  labs(title="Strong Ascent [Omega 500 hPa] All Ens. Memb.", y="Omega 500 hPa [hPa/s]")+
+  theme_bw()+theme(legend.position ="bottom", legend.direction = "horizontal",legend.background = element_rect(color = "black"),
+                   panel.grid = element_line(linetype="dashed",color="lightgrey"),
+                   axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
