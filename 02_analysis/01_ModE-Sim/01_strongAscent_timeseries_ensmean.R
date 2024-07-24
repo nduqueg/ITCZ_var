@@ -70,34 +70,7 @@ ggplot() + facet_grid( L1 ~ L2, switch="y" )+
 ################################-
 # Strong ascent ----
 ################################-
-smt.min.max <- function(x,type){
-  # 'x' is the Omega at 500 hPa, which will be smoothed around the minimum with an spline curve and 
-  # the position of its minimum will be also identified
-  
-  aprox <- apply(x,1, paste0("which.",type) %>% get())
-  ind.aprox <-cbind(aprox-3,aprox-2,aprox-1,aprox,aprox+1,aprox+2,aprox+3) %>% t() %>% as.data.frame() # indices of values close to the Max StrFunct for the Spline model
-  lat.models <- apply(ind.aprox, 2, function(ind,lat) lat[ind], lat) %>%  as.data.frame() # latitudes for the Spline model
-  
-  data.spModel <- mapply(FUN= function(x,ind) x[ind], # extracts the MAx StrFunct values near the Max for the Spline model
-                         x %>% as.matrix() %>% split(.,row(.)), 
-                         ind.aprox,
-                         SIMPLIFY = F) %>% 
-    
-    mapply(function(y,lat) cbind.data.frame(lat,y), # paste for each time step the latitude and the values near the Max StrFunc
-           .,
-           lat.models, 
-           SIMPLIFY = F) %>% 
-    lapply(., `colnames<-`,c("x.mod","y.mod"))
-  
-  sp.models <- lapply(data.spModel, function(x) lm(y.mod ~ splines::ns(x.mod,3), data= x))
-  pos.mastrf <- numeric()
-  for(k in 1:length(sp.models)){ # for each year identify the position of the Strong Ascent
-    pos.mastrf[k] <- predict(sp.models[[k]], newdata = data.frame(x.mod= seq(lat.models[7,k],lat.models[1,k],by=0.1))) %>% as.numeric(.) %>% matrix(.,nrow=1) %>% 
-      apply(.,1,get(paste0("which.",type))) %>% 
-      seq(lat.models[7,k],lat.models[1,k],by=0.1)[.]
-  }
-  return(pos.mastrf)
-}
+# the function for identifying the ITCZ feature' location, based on smoothing spline, is loaded with the settings file (00_settings.R)
 
 strAsc <- list()
 lat.min.model <- list()
@@ -107,7 +80,7 @@ for( i in c("ep1","ep2")){ # two time periods
   lat.min.model[[i]] <- list()
   for (j in seasons){
     
-    strAsc[[i]][[j]] <- smt.min.max(Omega[[i]][[j]] %>% t(),"min")
+    strAsc[[i]][[j]] <- smt.min.max(Omega[[i]][[j]] %>% t(),"min", lat)
     lat.min.model[[i]][[j]] <- Omega[[i]][[j]] %>% apply(., 2, which.min) %>% lat[.]
     
   }
