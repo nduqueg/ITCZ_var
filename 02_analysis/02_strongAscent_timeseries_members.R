@@ -160,13 +160,13 @@ for( i in names(Omega.s)){ # two time periods
   stopCluster(cl)
   
   Epoch <- with (sets, Epoch[i==Set][1])
-  if (i=="ModE-RA") Epoch <- "ModERA" else Epoch <- paste0("ep",Epoch)
+  if (i=="ModE-RA") Epoch <- "ModERA" else Epoch <- paste0("ep",Epoch)  # defines the Epoch for attaching the dates to the time series of the members
   
   loc.strAsc[[i]] <- lapply(loc.strAsc[[i]], 
-                        function(x,dates){ y <- as.data.frame(x); z <- cbind.data.frame(dates,y);return(z)},
+                        function(x,dates){ y <- as.data.frame(x); z <- cbind.data.frame(dates,y); return(z)},
                         Dates[[Epoch]])
   strAsc[[i]] <- lapply(strAsc[[i]], 
-                            function(x,dates){ y <- as.data.frame(x); z <- cbind.data.frame(dates,y);return(z)},
+                            function(x,dates){ y <- as.data.frame(x); z <- cbind.data.frame(dates,y); return(z)},
                             Dates[[Epoch]])
 }
 
@@ -179,7 +179,8 @@ save(strAsc,file="./01_Data/02_Omega500/_allMemb_StrAsc.Rdata")
 load("./01_Data/02_Omega500/_allMemb_LocStrAsc.Rdata")
 load("./01_Data/02_Omega500/_allMemb_StrAsc.Rdata")
 
-Omega.loc.g <- loc.strAsc %>% reshape::melt(., id=c("dates")) %>% magrittr::set_colnames(., c("dates","Season","value","Memb","Dataset")) %>% 
+Omega.loc.g <- loc.strAsc %>% 
+  reshape::melt(., id=c("dates")) %>% magrittr::set_colnames(., c("dates","Season","value","Memb","Dataset")) %>% 
   dplyr::group_by(., Dataset, dates, Season) %>%
   dplyr::summarise(p5= quantile(value, probs = 0.05, na.rm = T),
                   p95=quantile(value, probs= 0.95, na.rm = T),
@@ -188,6 +189,8 @@ Omega.loc.g <- loc.strAsc %>% reshape::melt(., id=c("dates")) %>% magrittr::set_
   as.data.frame() %>% within(., Dataset <- factor(Dataset, levels=unique(sets$Set)))
 
 palette <- brewer.pal(9, "Set1")[-c(6:8)]
+
+# plot of LOCATION of the 90% uncertainty bands for each subset
 Omega.loc.g %>%
   ggplot(., aes(x= dates, fill=Dataset)) +
   facet_wrap(. ~ Season, scales = "free_y",ncol=1)+
@@ -199,7 +202,8 @@ Omega.loc.g %>%
                    panel.grid = element_line(linetype="dashed",color="lightgrey"),
                    axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
 
-Omega.str.g <- strAsc %>% reshape::melt(., id=c("dates")) %>% magrittr::set_colnames(., c("dates","Season","value","Memb","Dataset")) %>% 
+Omega.str.g <- strAsc %>% 
+  reshape::melt(., id=c("dates")) %>% magrittr::set_colnames(., c("dates","Season","value","Memb","Dataset")) %>% 
   within(., {  
     Dataset <- factor(Dataset, levels=unique(sets$Set))
     value <- value*100
@@ -211,6 +215,7 @@ Omega.str.g <- strAsc %>% reshape::melt(., id=c("dates")) %>% magrittr::set_coln
                    max= max(value, na.rm = T)) %>% 
   as.data.frame()
 
+# plot of STRENGHT of the 90% uncertainty band for each subset
 Omega.str.g %>%
   ggplot(., aes(x= dates, fill=Dataset)) +
   facet_wrap(. ~ Season, scales = "free_y",ncol=1)+
@@ -227,7 +232,8 @@ Omega.str.g %>%
 ## probability distribution of each sub-ensemble ----
 ################################-
 
-Omega.str.g <- strAsc %>% reshape::melt(., id=c("dates")) %>% magrittr::set_colnames(., c("dates","Season","value","Memb","Dataset")) %>% 
+Omega.str.g <- strAsc %>% 
+  reshape::melt(., id=c("dates")) %>% magrittr::set_colnames(., c("dates","Season","value","Memb","Dataset")) %>% 
   within(., {  
     Dataset <- factor(Dataset, levels=unique(sets$Set))
     value <- value*100
@@ -235,8 +241,11 @@ Omega.str.g <- strAsc %>% reshape::melt(., id=c("dates")) %>% magrittr::set_coln
   dplyr::reframe(omega=density(value, na.rm=T)$x, pdf= density(value, na.rm=T)$y, 
                  normal= shapiro.test(value)$p.value >0.05)
 
+spec.Dataset <- "set_1420-1"
+
+# plot of the PDF with shades of red for each time step
 Omega.str.g %>%
-  subset(.,Season=="DJF" & Dataset=="set_1420-1" ) %>% 
+  subset(.,Season=="DJF" & Dataset== spec.Dataset) %>% 
   ggplot(., aes(x= dates, y= omega, color=pdf)) +
   facet_wrap(. ~ Dataset, scales = "free_y",ncol=1)+
   
@@ -251,6 +260,7 @@ Omega.str.g %>%
                    panel.grid = element_line(linetype="dashed",color="lightgrey"),
                    axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
 
+# plot of test of normal distribution for each subset
 Omega.str.g %>%
   ggplot(.,aes(x=dates,y=Dataset,fill=normal))+
   facet_wrap(.~Season, ncol=1)+
@@ -267,7 +277,8 @@ Omega.str.g %>%
 ## probability distribution of all the ensemble ----
 ################################-
 
-ModE_Sim.normality <- strAsc %>% reshape::melt(., id=c("dates")) %>% magrittr::set_colnames(., c("dates","Season","value","Memb","Dataset")) %>% 
+ModE_Sim.normality <- strAsc %>% 
+  reshape::melt(., id=c("dates")) %>% magrittr::set_colnames(., c("dates","Season","value","Memb","Dataset")) %>% 
   within(., {  
     Dataset <- factor(Dataset, levels=unique(sets$Set))
     value <- value*100
@@ -276,6 +287,7 @@ ModE_Sim.normality <- strAsc %>% reshape::melt(., id=c("dates")) %>% magrittr::s
   dplyr::reframe(omega=density(value, na.rm=T)$x, pdf= density(value, na.rm=T)$y, 
                  normal= shapiro.test(value)$p.value >0.05)
 
+# plot of normality test
 ModE_Sim.normality %>% 
   ggplot(.,aes(x=dates,y=Season,fill=normal))+
   geom_tile()+
@@ -288,6 +300,7 @@ ModE_Sim.normality %>%
                    panel.grid = element_line(linetype="dashed",color="lightgrey"),
                    axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
 
+# plot for the PDF in shades of red for each day considering the whole ModE-Sim ensemble
 ModE_Sim.normality %>%
   ggplot(., aes(x= dates, y= omega, color=pdf)) +
   facet_wrap(. ~ Season, scales = "free_y",ncol=1)+

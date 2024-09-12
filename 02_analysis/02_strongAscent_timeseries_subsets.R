@@ -12,7 +12,10 @@ library(RColorBrewer)
 source("00_settings.R")
 setwd(dir.base)
 
+################################-
 ### Dates ----
+################################-
+
 Dates <- list()
 Dates$all <- seq(as.Date("1420-01-01"), as.Date("2009-12-01"), by="year")
 Dates$ep1 <- seq(as.Date("1420-01-01"), as.Date("1849-12-01"), by="year")
@@ -20,8 +23,10 @@ Dates$ep2 <- seq(as.Date("1850-01-01"), as.Date("2009-12-01"), by="year")
 Dates$ModERA <- seq(as.Date("1421-01-01"), as.Date("2008-12-01"), by="year")
 seasons <- c("DJF","JJA")
 
-
+################################-
 ## load data ----
+################################-
+
 Omega <<- list()
 
 f <- nc_open("./01_Data/02_Omega500/ModE-Sim_set_1420-1_to_3_Omega500hPa-ZonMean_1420-1849_sDJF.nc")
