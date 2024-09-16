@@ -8,6 +8,7 @@ library(hydroTSM)
 library(ggplot2)
 library(metR)
 library(RColorBrewer)
+library(reshape)
 
 source("00_settings.R")
 setwd(dir.base)
@@ -92,6 +93,24 @@ South <- list()
 Int.Hem <- list()
 Tropical <- list()
 
+sqrt(cos(3.14159*lat/180))
+
+mean.lat <- function(x, lat.f){
+  
+  total.weight <- sqrt(cos(3.14159*lat.f/180)) %>% sum()
+  
+  if( length(lat.f) == dim(x)[2]){
+    y <- sweep(x, 2, FUN="*", sqrt(cos(3.14159*lat.f/180))) %>% # applying the weights
+      apply(.,1, sum, na.rm=T) %>% 
+      magrittr::divide_by(., total.weight ) # normalizing the weights
+    
+  } else{
+    stop("not equal latitude intervals in both dataset and latitude vector")
+  } 
+    
+  return(y)
+}
+
 print("Calculating inter-hemispheric difference by subset:")
 for( i in names(Temp)){
   print(i)
@@ -101,12 +120,15 @@ for( i in names(Temp)){
   Int.Hem[[i]] <- list()
   Tropical[[i]] <- list()
   
+  # doing the calculation by the seasons or the annual mean
   for (j in c(seasons, "annual")){
-    North[[i]][[j]] <- Temp[[i]][[j]][, lat >= 30] %>% apply(., 1, mean, na.rm=T)
-    South[[i]][[j]] <- Temp[[i]][[j]][, lat <= -30] %>% apply(., 1, mean, na.rm=T)
+    North[[i]][[j]] <- Temp[[i]][[j]][, lat >= 30] %>% mean.lat(., lat.f = lat[lat >= 30])
+    
+    South[[i]][[j]] <- Temp[[i]][[j]][, lat <= -30] %>% mean.lat(., lat.f = lat[lat <= -30])
+    
     Int.Hem[[i]][[j]] <- North[[i]][[j]] - South[[i]][[j]]
     
-    Tropical[[i]][[j]] <- Temp[[i]][[j]][, lat >= -30 & lat <= 30] %>% apply(., 1, mean, na.rm=T)
+    Tropical[[i]][[j]] <- Temp[[i]][[j]][, lat >= -30 & lat <= 30] %>% mean.lat(.,  lat.f = lat[lat >= -30 & lat <= 30])
   } 
   
   if (substr(i, 5,8) =="1420"){ epoch <- "ep1" } else if(substr(i, 5,8) =="1850"){ epoch <- "ep2"} else { epoch <- "ModERA" }
@@ -124,7 +146,10 @@ for( i in names(Temp)){
 
 Data.g <- list()
 
-for( Series in c("North", "South", "Int.Hem", "Tropical"))  Data.g[[Series]] <- get(Series) %>% melt(., id="dates") %>% cbind(.,Series)
+for( Series in c("North", "South", "Int.Hem", "Tropical"))  
+  Data.g[[Series]] <- get(Series) %>% 
+  melt(., id="dates") %>% 
+  cbind(.,Series)
 
 Data.g <- do.call(rbind,Data.g)[,-2] %>% magrittr::set_colnames(., c("dates","value","Season","Dataset","Series")) %>% 
   within(., Dataset <- factor(Dataset, levels=names(Temp))  )
