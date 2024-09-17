@@ -84,7 +84,7 @@ a <- read_Mod(f.mod= "./01_Data/03_temp2/ModE-RA_lowres_20mem_Set_1420-3_1850-1_
               Set="ModE-RA")
 
 ################################-
-# temperature at 2 m ----
+# temperature at 2 m, interhemispheric ----
 ################################-
 # the function for identifying the ITCZ feature' location, based on smoothing spline, is loaded with the settings file (00_settings.R)
 
@@ -93,14 +93,13 @@ South <- list()
 Int.Hem <- list()
 Tropical <- list()
 
-sqrt(cos(3.14159*lat/180))
 
 mean.lat <- function(x, lat.f){
   
-  total.weight <- sqrt(cos(3.14159*lat.f/180)) %>% sum()
+  total.weight <- cos(3.14159*lat.f/180) %>% sum()
   
   if( length(lat.f) == dim(x)[2]){
-    y <- sweep(x, 2, FUN="*", sqrt(cos(3.14159*lat.f/180))) %>% # applying the weights
+    y <- sweep(x, 2, FUN="*", cos(3.14159*lat.f/180)) %>% # applying the weights
       apply(.,1, sum, na.rm=T) %>% 
       magrittr::divide_by(., total.weight ) # normalizing the weights
     
@@ -195,6 +194,39 @@ subset(Data.g, Series != "Int.Hem" & Series != "Tropical" & Season !="annual") %
                date_labels = "%Y", expand=c(0.01,0.01))+
   labs(title="Temperature - Subsets Ens. ", y="Temperature [°K]")+
   theme_bw()+theme(legend.position = c(0.2,0.1), legend.direction = "horizontal",
+                   panel.grid = element_line(linetype="dashed",color="lightgrey"),
+                   strip.text = element_text(size=12),
+                   axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+
+
+################################-
+# temperature at 2 m,  whole world----
+################################-
+World <- list()
+
+for( i in names(Temp)){
+  print(i)
+  
+  World[[i]] <- Temp[[i]][["annual"]] %>% mean.lat(., lat.f = lat)
+  
+  if (substr(i, 5,8) =="1420"){ epoch <- "ep1" } else if(substr(i, 5,8) =="1850"){ epoch <- "ep2"} else { epoch <- "ModERA" }
+  
+  dates <- Dates[[epoch]]
+  World[[i]] <- cbind.data.frame(World[[i]], dates)
+}
+
+data.g <- World %>% 
+  melt(., id="dates") %>% 
+  magrittr::set_colnames(., c("dates","variable","value","Dataset")) %>% 
+  within(., Dataset <- factor(Dataset, levels=names(Temp))  )
+
+data.g %>% 
+  ggplot(., aes(x= dates, y= value, col=Dataset)) +
+  geom_line()+ scale_color_manual(values = palette)+
+  scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
+               date_labels = "%Y", expand=c(0.01,0.01))+
+  labs(title="Temperature - Subsets Ens. ", y="Temperature [°K]")+
+  theme_bw()+theme(legend.position = c(0.2,0.95), legend.direction = "horizontal",
                    panel.grid = element_line(linetype="dashed",color="lightgrey"),
                    strip.text = element_text(size=12),
                    axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
