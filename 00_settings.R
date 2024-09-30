@@ -30,12 +30,10 @@ smt.min.max <- function(x,type, lat){
   # It will be smoothed around the minimum or maximum with an spline curve and the position will be also identified with three values around the models' maximum or minimum
   #
   
-  lat.f <- lat[lat >= -45 & lat <= 45]
-  
-  aprox <- x[,lat >= -45 & lat <= 45] %>% apply(.,1, paste0("which.",type) %>% get()) %>% as.numeric() # position of the model's maximum or minimum
+  aprox <- x %>% apply(.,1, paste0("which.",type) %>% get()) %>% as.numeric() # position of the model's maximum or minimum
   
   ind.aprox <- cbind(aprox-3,aprox-2,aprox-1,aprox,aprox+1,aprox+2,aprox+3) %>% t() %>% as.data.frame() # indices of values close to the Max StrFunct for the Spline model
-  lat.models <- apply(ind.aprox, 2, function(ind,lat) lat[ind], lat.f) %>%  as.data.frame() # latitudes for the Spline model
+  lat.models <- apply(ind.aprox, 2, function(ind,lat) lat[ind], lat) %>%  as.data.frame() # latitudes for the Spline model
   
   data.spModel <- mapply(FUN= function(x,ind) x[ind], # extracts the MAx StrFunct values near the Max for the Spline model
                          x[,lat >= -45 & lat <= 45] %>% as.matrix() %>% split(.,row(.)), 
