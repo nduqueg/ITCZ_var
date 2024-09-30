@@ -93,7 +93,7 @@ South <- list()
 Int.Hem <- list()
 Tropical <- list()
 
-
+# function for average considering the latitude weighting
 mean.lat <- function(x, lat.f){
   
   total.weight <- cos(3.14159*lat.f/180) %>% sum()
@@ -145,10 +145,11 @@ for( i in names(Temp)){
 
 Data.g <- list()
 
-for( Series in c("North", "South", "Int.Hem", "Tropical"))  
+for( Series in c("North", "South", "Int.Hem", "Tropical")){
   Data.g[[Series]] <- get(Series) %>% 
-  melt(., id="dates") %>% 
-  cbind(.,Series)
+    melt(., id="dates") %>% 
+    cbind(.,Series)
+}
 
 Data.g <- do.call(rbind,Data.g)[,-2] %>% magrittr::set_colnames(., c("dates","value","Season","Dataset","Series")) %>% 
   within(., Dataset <- factor(Dataset, levels=names(Temp))  )
@@ -200,7 +201,7 @@ subset(Data.g, Series != "Int.Hem" & Series != "Tropical" & Season !="annual") %
 
 
 ################################-
-# temperature at 2 m,  whole world----
+# temperature at 2 m,  whole world ----
 ################################-
 World <- list()
 
@@ -230,3 +231,39 @@ data.g %>%
                    panel.grid = element_line(linetype="dashed",color="lightgrey"),
                    strip.text = element_text(size=12),
                    axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+
+################################-
+# anomalies hemispheres ----
+################################-
+
+Data.anom <- list()
+anom.1500.1850 <- function(x){
+  y <- read.zoo(x, index.column = "dates")
+  
+  if (x$dates[1] < "1850-01-01") p.anom <- seq(as.Date("1500-01-01"), as.Date("1850-12-01"), by="year") else p.anom <- seq(as.Date("1850-01-01"), as.Date("1900-12-01"), by="year")
+  
+    anom <- (y - mean( y[p.anom] )) %>% 
+    fortify.zoo()
+  return(anom)
+}
+
+for( Series in c("North", "South", "Tropical")){
+  Data.anom[[Series]] <- get(Series) %>% 
+    lapply(., function(x) lapply(x,anom.1500.1850) ) %>% 
+    lapply(., function(x) lapply(x,`colnames<-`,c("dates","value")))
+}
+
+Data.anom %>% 
+  melt(., id=c("dates","value")) %>% magrittr::set_colnames(., c("dates","value","Season","Dataset", "Series")) %>% 
+  within(., Dataset <- factor(Dataset, levels=names(Temp)) ) %>% 
+  ggplot(., aes(x= dates, y= value, col=Dataset))+
+  facet_grid(Series ~ Season, switch = "y")+
+  geom_line()+ scale_color_manual(values = palette)+
+  scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
+               date_labels = "%Y", expand=c(0.01,0.01))+
+  labs(title="Temperature anomaly- Subsets Ens. ", y="Temperature [°K]")+
+  theme_bw()+theme(legend.position = c(0.2,0.3), legend.direction = "horizontal",
+                   panel.grid = element_line(linetype="dashed",color="lightgrey"),
+                   strip.text = element_text(size=12),
+                   axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+
