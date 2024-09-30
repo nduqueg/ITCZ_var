@@ -1,0 +1,6 @@
+zaxistype = pressure
+size      = 7
+name      = plev
+longname  = pressure
+units     = Pa
+levels    = 100000 85000 70000 50000 30000 20000 10000 
