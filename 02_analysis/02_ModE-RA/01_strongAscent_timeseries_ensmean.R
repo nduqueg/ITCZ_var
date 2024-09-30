@@ -61,10 +61,13 @@ ggplot() + facet_wrap( .~ L1 , ncol=2 )+
 
 strAsc  <- list()
 lat.min.model  <- list()
+
+Lat.trop.fil <- lat[lat >= -45 & lat <= 45]
+
 for (j in seasons){
   
-  strAsc[[j]] <- smt.min.max(Omega[[j]] %>% t(),"min", lat) # identify the position of the strong Ascent with the splines
-  lat.min.model[[j]] <- Omega[[j]] %>% apply(., 2, which.min) %>% lat[.] # identify it without the smoothing
+  strAsc[[j]] <- smt.min.max(Omega[[j]][ lat >= -45 & lat <= 45 , ] %>% t(),"min", Lat.trop.fil) # identify the position of the strong Ascent with the splines
+  lat.min.model[[j]] <- Omega[[j]][ lat >= -45 & lat <= 45 , ] %>% apply(., 2, which.min) %>% Lat.trop.fil[.] # identify it without the smoothing
   
 }
 strAsc  <- lapply(strAsc , function(x,dates) cbind.data.frame(x,dates), Dates )

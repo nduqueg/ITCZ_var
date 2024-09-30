@@ -75,13 +75,15 @@ ggplot() + facet_grid( L1 ~ L2, switch="y" )+
 strAsc <- list()
 lat.min.model <- list()
 
+Lat.trop.fil <- lat[lat >= -45 & lat <= 45]
+
 for( i in c("ep1","ep2")){ # two time periods
   strAsc[[i]] <- list()
   lat.min.model[[i]] <- list()
   for (j in seasons){
     
-    strAsc[[i]][[j]] <- smt.min.max(Omega[[i]][[j]] %>% t(),"min", lat)
-    lat.min.model[[i]][[j]] <- Omega[[i]][[j]] %>% apply(., 2, which.min) %>% lat[.]
+    strAsc[[i]][[j]] <- smt.min.max(Omega[[i]][[j]][ lat >= -45 & lat <= 45 , ] %>% t(),"min", Lat.trop.fil)
+    lat.min.model[[i]][[j]] <- Omega[[i]][[j]][ lat >= -45 & lat <= 45 , ] %>% apply(., 2, which.min) %>% Lat.trop.fil[.]
     
   }
   strAsc[[i]] <- lapply(strAsc[[i]], function(x,dates) cbind.data.frame(x,dates), Dates[[i]])

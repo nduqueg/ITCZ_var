@@ -75,6 +75,8 @@ loc.strAsc <- list()
 strAsc <- list()
 lat.min.model <- list()
 
+Lat.trop.fil <- lat[lat >= -45 & lat <= 45,]
+
 print("Calculating position for subset:")
 for( i in names(Omega)){
   print(i)
@@ -83,7 +85,7 @@ for( i in names(Omega)){
   strAsc[[i]] <- list()
   
   for (j in seasons){
-    loc.strAsc[[i]][[j]] <- smt.min.max(Omega[[i]][[j]] %>% t(),"min", lat)
+    loc.strAsc[[i]][[j]] <- smt.min.max(Omega[[i]][[j]][lat >= -45 & lat <= 45,] %>% t(),"min", Lat.trop.fil)
     strAsc[[i]][[j]] <- apply(Omega[[i]][[j]][lat >= -45 & lat <= 45,], 2, min)
   } 
   
