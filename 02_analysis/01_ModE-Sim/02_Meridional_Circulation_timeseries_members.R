@@ -285,3 +285,15 @@ ggplot( ) +
                    panel.grid = element_line(linetype="dashed",color="lightgrey"),
                    strip.text = element_text(size=12),
                    axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+
+ggplot( ) +
+  facet_wrap(. ~ Season, scales = "free_y", ncol=1)+
+  geom_ribbon(data=mastrf.loc.g %>% subset(., variable=="strength"), aes(x= dates, fill=Dataset,ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
+  geom_line(data=mastrf.loc.ens.g %>% subset(., variable=="strength"), aes(x= dates, y=value, color=Dataset))+ scale_color_manual(values = c(palette[-6],"black"))+
+  scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
+               date_labels = "%Y", expand=c(0.01,0.01))+
+  labs(title="ITCZ strength - ModE-Sim Ens. Memb.", y="stregnth [Pa/s]")+
+  theme_bw()+theme(legend.position = "bottom", legend.direction = "horizontal",
+                   panel.grid = element_line(linetype="dashed",color="lightgrey"),
+                   strip.text = element_text(size=12),
+                   axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
