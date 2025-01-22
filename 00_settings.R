@@ -36,7 +36,7 @@ smt.min.max <- function(x,type, lat){
   lat.models <- apply(ind.aprox, 2, function(ind,lat) lat[ind], lat) %>%  as.data.frame() # latitudes for the Spline model
   
   data.spModel <- mapply(FUN= function(x,ind) x[ind], # extracts the MAx StrFunct values near the Max for the Spline model
-                         x[,lat >= -45 & lat <= 45] %>% as.matrix() %>% split(.,row(.)), 
+                         x %>% as.matrix() %>% split(.,row(.)), 
                          ind.aprox,
                          SIMPLIFY = F) %>% 
     

@@ -5,6 +5,7 @@ cat("\014")
 library(ncdf4)
 library(abind)
 library(hydroTSM)
+library(reshape)
 library(ggplot2)
 library(metR)
 library(RColorBrewer)
@@ -26,6 +27,10 @@ seasons <- c("DJF","JJA")
 ################################-
 ## load data ----
 ################################-
+Volc <- read.csv("./01_Data/Volcanic_erup.csv")[,-1] %>% 
+  melt() %>% 
+  dplyr::mutate(Date= paste0(value,"-01-01") %>% as.Date(),
+                variable = factor(variable, levels =c("Fischer","VEI5")))
 
 Ppt <<- list()
 
@@ -233,6 +238,20 @@ trop.Ppt.g %>%
                    strip.text = element_text(size=12),
                    axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
 
+trop.Ppt.g %>% subset(., Season == "DJF") %>% 
+  
+  ggplot(., aes(x= dates, y= value, col=Dataset)) +
+  facet_grid(Band ~ Season, scales = "free_y", switch = "y", labeller= labeller(Band = Band.labs))+
+  geom_vline(data= Volc, aes(xintercept=Date, linetype=variable), col="#a65628", show.legend = FALSE, alpha=0.4)+
+  geom_line()+ scale_color_manual(values = palette)+
+  scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
+               date_labels = "%Y", expand=c(0.01,0.01))+
+  labs(title="Mean zonal tropical Precipitation in bands - Subsets Ens. ", y="Ppt  [mm/month]")+
+  theme_bw()+theme(legend.position = c(0.2,0.05), legend.direction = "horizontal",
+                   panel.grid = element_line(linetype="dashed",color="00"),
+                   strip.text = element_text(size=12),
+                   axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+
 ################################-
 # anomalies precipitation in tropical bands ----
 ################################-
@@ -254,12 +273,14 @@ for( Series in c("north", "deep", "south")){
     lapply(., function(x) lapply(x,`colnames<-`,c("dates","value")))
 }
 
-Data.anom %>% 
+Data.anom <- Data.anom %>% 
   reshape::melt(., id=c("dates","value")) %>% magrittr::set_colnames(., c("dates","value","Season","Dataset", "Band")) %>% 
   within(., {
     Dataset <- factor(Dataset, levels=names(Ppt)) 
     Band <- factor(Band, levels= c("north","deep","south" ))
-    }) %>% 
+    })
+
+Data.anom %>% 
   ggplot(., aes(x= dates, y= value, col=Dataset)) +
   facet_grid(Band ~ Season, scales = "free_y", switch = "y", labeller= labeller(Band = Band.labs))+
   geom_line()+ scale_color_manual(values = palette)+
@@ -268,5 +289,19 @@ Data.anom %>%
   labs(title="Anomalies zonal tropical Precipitation in bands - Subsets Ens. ", y="Ppt  [mm/month]")+
   theme_bw()+theme(legend.position = c(0.7,0.05), legend.direction = "horizontal",
                    panel.grid = element_line(linetype="dashed",color="lightgrey"),
+                   strip.text = element_text(size=12),
+                   axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+
+Data.anom %>% subset(., Band=="north") %>% 
+  
+  ggplot(., aes(x= dates, y= value, col=Dataset)) +
+  facet_wrap(.~Season, scales = "free_y", ncol=1)+
+  geom_vline(data= Volc, aes(xintercept=Date, linetype=variable), col="#a65628", show.legend = FALSE, alpha=0.4)+
+  geom_line()+ scale_color_manual(values = palette)+
+  scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
+               date_labels = "%Y", expand=c(0.01,0.01))+
+  labs(title="Anomalies zonal tropical Precipitation in North subtropical High - Subsets Ens. ", y="Ppt  [mm/month]")+
+  theme_bw()+theme(legend.position = c(0.2,0.5), legend.direction = "horizontal",
+                   panel.grid = element_line(linetype="dashed",color="00"),
                    strip.text = element_text(size=12),
                    axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))

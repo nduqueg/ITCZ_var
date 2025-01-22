@@ -105,6 +105,12 @@ for (i in 1:nrow(sets.ens)){
 }
 
 # save(mastrf, file="./01_Data/01_Streamfunction/_allMemb_mastrf500hPa.Rdata")
+
+Volc <- read.csv("./01_Data/Volcanic_erup.csv")[,-1] %>% 
+  melt() %>% 
+  dplyr::mutate(Date= paste0(value,"-01-01") %>% as.Date(),
+                variable = factor(variable, levels =c("Fischer","VEI5")))
+
 ################################-
 # Mid tropospheric calculation ----
 ################################-
@@ -276,13 +282,14 @@ ggplot( ) +
 
 ggplot( ) +
   facet_wrap(. ~ Season, scales = "free_y", ncol=1)+
+  geom_vline(data= Volc, aes(xintercept=Date, linetype=variable), col="#a65628", show.legend = FALSE, alpha=0.4)+
   geom_ribbon(data=mastrf.loc.g %>% subset(., variable=="width"), aes(x= dates, fill=Dataset,ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
   geom_line(data=mastrf.loc.ens.g %>% subset(., variable=="width"), aes(x= dates, y=value, color=Dataset))+ scale_color_manual(values = c(palette[-6],"black"))+
   scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
                date_labels = "%Y", expand=c(0.01,0.01))+
   labs(title="ITCZ width - ModE-Sim Ens. Memb.", y="Width [°]")+
   theme_bw()+theme(legend.position = "bottom", legend.direction = "horizontal",
-                   panel.grid = element_line(linetype="dashed",color="lightgrey"),
+                   panel.grid = element_line(linetype="dashed",color="00"),
                    strip.text = element_text(size=12),
                    axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
 
