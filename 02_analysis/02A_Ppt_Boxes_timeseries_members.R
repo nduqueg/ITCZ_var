@@ -224,8 +224,7 @@ ggplot( ) +
   geom_vline(data= Volc, aes(xintercept=Date, linetype=variable), col="#a65628", show.legend = FALSE, alpha=0.4)+
   geom_ribbon(data=P.anom.g, aes(x= dates, fill=Set,ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
   geom_line(data=P.ens.anom.g, aes(x= dates, y=value, color=Set))+ scale_color_manual(values = c(palette[-6],"black"))+
-  # scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
-  #              date_labels = "%Y", expand=c(0.01,0.01))+
+  scale_x_continuous(breaks = seq(1450,2000,by=50), expand=c(0.01,0.01))+
   labs(title="Precipitation anomalies in proxies regions Ens. Memb.", y="Ppt [mm/season]")+
   theme_bw()+theme(legend.position = "bottom", legend.direction = "horizontal",legend.background = element_rect(color = "black"),
                    panel.grid = element_line(linetype="dashed",color="00"),
@@ -237,8 +236,7 @@ for(i in levels(P.ens.anom.g$Region)){
     geom_vline(data= Volc, aes(xintercept=Date, linetype=variable), col="#a65628", show.legend = FALSE, alpha=0.4)+
     geom_ribbon(data= subset(P.anom.g, Region==i), aes(x= dates, fill=Set,ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
     geom_line(data= subset(P.ens.anom.g, Region==i), aes(x= dates, y=value, color=Set))+ scale_color_manual(values = c(palette[-6],"black"))+
-    # scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
-    #              date_labels = "%Y", expand=c(0.01,0.01))+
+    scale_x_continuous(breaks = seq(1450,2000,by=50), expand=c(0.01,0.01))+
     labs(title=paste0("Precipitation anomalies in proxies - ",i," - Ens. Memb."), y="Ppt [mm/season]")+
     theme_bw()+theme(legend.position = "bottom", legend.direction = "horizontal",legend.background = element_rect(color = "black"),
                      panel.grid = element_line(linetype="dashed",color="00"),
