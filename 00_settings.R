@@ -18,6 +18,7 @@ dir.base <- "/scratch2/nduque/50_ITCZ/ITCZ_var/"
 ###############################-
 
 dir.data.ModERA <- "/mnt/climstor/ERC_PALAEO/ModE-RA/outdata/"
+dir.data.ModERAclim <- "/mnt/climstor/ERC_PALAEO/ModE-RAclim/outdata/"
 
 
 ###############################-
