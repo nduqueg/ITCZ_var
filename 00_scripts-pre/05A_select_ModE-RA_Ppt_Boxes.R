@@ -23,11 +23,11 @@ Set <- "lowres_20mem_Set_1420-3_1850-1"
 Memb <- paste0("m0",seq(41,60, by=1))
 
 # boxes 
-boxes <- data.frame(name=c("NAmMon","SAmMon","Sahel","EAfrMon","SEAsiaMon","NAusMon","NTrPac","Galapagos"),
-                    lon.min=c(-100, -70,     -20,     15,       85,        120,      -160,    -95),
-                    lon.max=c(-80,  -50,      30,     40,      120,        160,      -120,    -85),
-                    lat.min=c(10,   -20,       5,    -25,        5,        -20,       2.5,    -1),
-                    lat.max=c(20,    -5,      15,     -5,       25,         -5,        15,     3))
+boxes <- data.frame(name=c("NAmMon","SAmMon","Sahel","EAfrMon","SEAsiaMon","NAusMon","NTrPac","Galapagos", "SESAme","SAfr","SEastAus"),
+                    lon.min=c(-100, -70,     -20,     15,       85,        120,      -160,    -95,         -58,      15,    138),
+                    lon.max=c(-80,  -50,      30,     40,      120,        160,      -120,    -85,         -45,      25,    151),
+                    lat.min=c(10,   -20,       5,    -25,        5,        -20,       2.5,    -1,          -35,     -37,    -45),
+                    lat.max=c(20,    -5,      15,     -5,       25,         -5,        15,     3,          -20,     -30,    -34))
 
 ################################-
 ## fetch Omega500 and transform to zonal mean ----
@@ -95,3 +95,5 @@ for ( j in boxes$name){
 Dates <- seq(as.Date("1421-01-01"), as.Date("2008-12-31"), by="month")
 P.memb <- as.data.frame(P.memb) %>% cbind(Dates,.)
 save(P.memb, file="ModE-RA_lowres_20mem_Set_1420-3_1850-1_totprec-Boxes_1421-2008_mon.RData")
+
+setwd(dir.base)

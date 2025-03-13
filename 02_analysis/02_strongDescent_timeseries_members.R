@@ -200,7 +200,7 @@ min.max.memb <- function(y, Lat, feature ="loc", Trop.fil){
 loc.strDesc <- list()
 strDesc <- list()
 
-trop.fil <- lat >= 2 & lat <= 60
+trop.fil <- lat >= -60 & lat <= -2
 
 Dates$ep1 <- seq(as.Date("1420-01-01"), as.Date("1849-12-01"), by="year")
 Dates$ep2 <- seq(as.Date("1850-01-01"), as.Date("2009-12-01"), by="year")
@@ -210,7 +210,7 @@ print("identifying position")
 for( i in names(Omega.s)){ # two time periods
   print(i)
   
-  cl <- makeCluster(20)
+  cl <- makeCluster(10)
   registerDoParallel(cl)
   loc.strDesc[[i]] <- mclapply(Omega.s[[i]], min.max.memb, lat, "loc", trop.fil)
   strDesc[[i]] <- mclapply(Omega.s[[i]], min.max.memb, lat, "Str", trop.fil)
@@ -240,14 +240,14 @@ for( i in names(Omega.ens.s)){ # two time periods
   
 }
 
-save(loc.strDesc,file="./01_Data/02_Omega500/_allMemb_LocStrDesc.Rdata")
-save(strDesc,file="./01_Data/02_Omega500/_allMemb_StrDesc.Rdata")
+save(loc.strDesc,file="./01_Data/02_Omega500/_allMemb_LocStrDesc_south.Rdata")
+save(strDesc,file="./01_Data/02_Omega500/_allMemb_StrDesc_south.Rdata")
 
 ################################-
 ## plotting features timeseries ----
 ################################-
-load("./01_Data/02_Omega500/_allMemb_LocStrDesc.Rdata")
-load("./01_Data/02_Omega500/_allMemb_StrDesc.Rdata")
+load("./01_Data/02_Omega500/_allMemb_LocStrDesc_south.Rdata")
+load("./01_Data/02_Omega500/_allMemb_StrDesc_south.Rdata")
 
 loc.strDesc <- loc.strDesc %>% 
   reshape::melt(., id=c("dates")) %>% magrittr::set_colnames(., c("dates","Season","value","Memb","Dataset"))
@@ -272,7 +272,7 @@ ggplot( ) +
   geom_line(data=Omega.loc.ens.g, aes(x= dates, y=value, color=Dataset))+ scale_color_manual(values = c(palette[-6],"black"))+
   scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
                             date_labels = "%Y", expand=c(0.01,0.01))+
-  labs(title="Position Northern Strong Descent [Max. Omega 500 hPa] Ens. Memb.", y="Latitude [°]")+
+  labs(title="Position Southern Strong Descent [Max. Omega 500 hPa] Ens. Memb.", y="Latitude [°]")+
   theme_bw()+theme(legend.position = c(0.2,0.5), legend.direction = "horizontal",
                    panel.grid = element_line(linetype="dashed",color="00"),
                    axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
@@ -306,7 +306,7 @@ ggplot() +
   scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
                date_labels = "%Y", expand=c(0.01,0.01))+
   scale_y_continuous(transform = "reverse")+
-  labs(title="Northern Strong Descent [Max. Omega 500 hPa] Ens. Memb.", y="Omega 500 hPa [hPa/s]")+
+  labs(title="Southern Strong Descent [Max. Omega 500 hPa] Ens. Memb.", y="Omega 500 hPa [hPa/s]")+
   theme_bw()+theme(legend.position = c(0.2,0.5), legend.direction = "horizontal",legend.background = element_rect(color = "black"),
                    panel.grid = element_line(linetype="dashed",color="00"),
                    axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
