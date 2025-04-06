@@ -17,6 +17,8 @@ setwd(dir.base)
 ################################-
 ## generate names in ModE-Sim data ----
 ################################-
+Memb.aux <- character()
+for ( i in 1:100){ if (i>=10 & i <100) Memb.aux[i] <- paste0("m0",i) else if (i < 10) Memb.aux[i] <- paste0("m00",i) else Memb.aux[i] <- paste0("m",i)}
 
 # names of directories
 sets <- data.frame( Set= paste0("set_",rep(1420,3),"-",seq(1,3)) %>% rep(.,each=20),
@@ -34,6 +36,9 @@ sets <- data.frame( Set= paste0("set_",rep(1420,3),"-",seq(1,3)) %>% rep(.,each=
 ) %>% rbind(., data.frame( Set= "ModE-RA",
                            Memb= paste0("m0",seq(41,60)),
                            Epoch= 2)
+) %>% rbind(., data.frame( Set= "ModE-RAclim",
+                          Memb= Memb.aux,
+                          Epoch= 2)
 )
 
 # names of ensembles in subdirectories
@@ -46,9 +51,9 @@ sets.ens <- data.frame( Set= paste0("set_",rep(1420,3),"-",seq(1,3)),
                        Memb= rep("ensmean", 2),
                        Epoch= 2)
         ) %>% 
-  rbind(., data.frame( Set= "ModE-RA",
-                       Memb= "ensmean",
-                       Epoch= 2)
+  rbind(., data.frame( Set= c("ModE-RA", "ModE-RAclim"),
+                       Memb= rep("ensmean",2),
+                       Epoch= rep(2,2))
         )
 
 ### Dates ----
@@ -88,6 +93,10 @@ read_Mod <- function (Set, Memb, Epoch, varn="slp"){
     Dataset <- "ModE-RA"
     t.span <- "1421-2008"
     f.mod <- paste0("./01_Data/06A_SLP_ocean/lowres_20mem_Set_1420-3_1850-1/",Dataset,"_lowres_20mem_Set_1420-3_1850-1_",Memb,"_slp-ZonMean_",t.span)
+  }else if (Set == "ModE-RAclim"){
+    Dataset <- "ModE-RAclim"
+    t.span <- "1421-2008"
+    f.mod <- paste0("./01_Data/06A_SLP_ocean/lowres_100mem_Set_1/",Dataset,"_",Memb,"_slp-ZonMean_anom_",t.span)
   }
   
   f <- paste0(f.mod,"_mon.nc") %>% nc_open(.)
@@ -120,6 +129,10 @@ for (i in 1:nrow(sets.ens)){
       Dataset <- "ModE-RA"
       t.span <- "1421-2008"
       f.mod <- paste0("./01_Data/06A_SLP_ocean/",Dataset,"_lowres_20mem_Set_1420-3_1850-1_slp-ZonMean_",t.span)
+    }else if(Set == "ModE-RAclim"){
+      Dataset <- "ModE-RAclim"
+      t.span <- "1421-2008"
+      f.mod <- paste0("./01_Data/06A_SLP_ocean/",Dataset,"_lowres_100mem_Set_1_slp-ZonMean_",t.span)
     }
     
     paste0(f.mod,"_mon.nc") %>% nc_open(.)
@@ -153,7 +166,7 @@ for ( i in names(SLP)){
   print(i)
   
   Epoch <- with (sets, Epoch[i==Set][1])
-  if (i=="ModE-RA") Epoch <- "ModERA" else Epoch <- paste0("ep",Epoch)
+  if (i=="ModE-RA") Epoch <- "ModERA" else if (i=="ModE-RAclim") Epoch <- "ModERA" else Epoch <- paste0("ep",Epoch)
   
   SLP.s[[i]] <- mclapply(SLP[[i]], DJF_JJA, Dates[[Epoch]])
 
@@ -165,7 +178,7 @@ for ( i in names(SLP.ens)){
   print(i)
   
   Epoch <- with (sets.ens, Epoch[i==Set][1])
-  if (i=="ModE-RA") Epoch <- "ModERA" else Epoch <- paste0("ep",Epoch)
+  if (i=="ModE-RA") Epoch <- "ModERA" else if (i=="ModE-RAclim") Epoch <- "ModERA" else Epoch <- paste0("ep",Epoch)
   
   SLP.ens.s[[i]] <- DJF_JJA(SLP.ens[[i]], Dates[[Epoch]])
 }
@@ -218,7 +231,7 @@ for( i in names(SLP.s)){ # two time periods
   stopCluster(cl)
   
   Epoch <- with (sets, Epoch[i==Set][1])
-  if (i=="ModE-RA") Epoch <- "ModERA" else Epoch <- paste0("ep",Epoch)  # defines the Epoch for attaching the dates to the time series of the members
+  if (i=="ModE-RA") Epoch <- "ModERA" else if (i=="ModE-RAclim") Epoch <- "ModERA" else Epoch <- paste0("ep",Epoch)  # defines the Epoch for attaching the dates to the time series of the members
   
   loc.subThigh[[i]] <- lapply(loc.subThigh[[i]], 
                         function(x,dates){ y <- as.data.frame(x); z <- cbind.data.frame(dates,y); return(z)},
@@ -233,7 +246,7 @@ for( i in names(SLP.ens.s)){ # two time periods
   print(i)
 
   Epoch <- with (sets.ens, Epoch[i==Set][1])
-  if (i=="ModE-RA") Epoch <- "ModERA" else Epoch <- paste0("ep",Epoch)  # defines the Epoch for attaching the dates to the time series of the members
+  if (i=="ModE-RA") Epoch <- "ModERA" else if (i=="ModE-RAclim") Epoch <- "ModERA" else Epoch <- paste0("ep",Epoch)  # defines the Epoch for attaching the dates to the time series of the members
   dates <- Dates[[Epoch]]
   
   loc.subThigh[[i]][["ensmean"]] <- min.max.memb(SLP.ens.s[[i]], lat, "loc", trop.fil) %>% cbind.data.frame(dates, .)
@@ -323,6 +336,89 @@ ggplot() +
   theme_bw()+theme(legend.position = c(0.2,0.5), legend.direction = "horizontal",legend.background = element_rect(color = "black"),
                    panel.grid = element_line(linetype="dashed",color="00"),
                    axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+
+################################-
+## plotting ModE-RAclim features timeseries ----
+################################-
+load("./01_Data/06A_SLP_ocean/_allMemb_LocsubThigh_s.Rdata")
+load("./01_Data/06A_SLP_ocean/_allMemb_subThigh_s.Rdata")
+
+loc.subThigh <- loc.subThigh %>% 
+  reshape::melt(., id=c("dates")) %>% magrittr::set_colnames(., c("dates","Season","value","Memb","Dataset"))
+
+SLP.loc.g <- subset(loc.subThigh, Memb !="ensmean") %>% 
+  dplyr::group_by(., Dataset, dates, Season) %>%
+  dplyr::summarise(p5= quantile(value, probs = 0.05, na.rm = T),
+                   p95=quantile(value, probs= 0.95, na.rm = T),
+                   min= min(value, na.rm = T),
+                   max= max(value, na.rm = T)) %>% 
+  as.data.frame() %>% within(., Dataset <- factor(Dataset, levels=unique(sets$Set)))
+
+SLP.loc.ens.g <- subset(loc.subThigh, Memb =="ensmean") %>% within(., Dataset <- factor(Dataset, levels=unique(sets$Set)))
+
+palette <- brewer.pal(9, "Set1")[-c(6:8)]
+
+# plot of LOCATION of the 90% uncertainty bands for each subset
+ggplot( ) +
+  facet_wrap(. ~ Season, scales = "free_y",ncol=1)+
+  geom_vline(data= Volc, aes(xintercept=Date, linetype=variable), col="#a65628", show.legend = FALSE, alpha=0.4)+
+  geom_ribbon(data=SLP.loc.g, aes(x= dates, fill=Dataset,ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
+  geom_line(data=SLP.loc.ens.g, aes(x= dates, y=value, color=Dataset))+ scale_color_manual(values = c(palette[-6],"black"))+
+  scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
+               date_labels = "%Y", expand=c(0.01,0.01))+
+  labs(title="Position South Subtropical High [Max. SLP] Ens. Memb. - only oceans", y="Latitude [°]")+
+  theme_bw()+theme(legend.position = c(0.2,0.5), legend.direction = "horizontal",legend.background = element_rect(color = "black"),
+                   panel.grid = element_line(linetype="dashed",color="00"),
+                   axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+
+ggplot( ) +
+  facet_wrap(. ~ Season, scales = "free_y",ncol=1)+
+  geom_vline(data= Volc %>% subset(., Date>"1750-01-01"), aes(xintercept=Date, linetype=variable), col="#a65628", show.legend = FALSE, alpha=0.5)+
+  geom_ribbon(data=SLP.loc.g %>% subset(., dates>"1750-01-01"), aes(x= dates, fill=Dataset,ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
+  geom_line(data=SLP.loc.ens.g %>% subset(., dates>"1750-01-01"), aes(x= dates, y=value, color=Dataset))+ scale_color_manual(values = c(palette[-c(6)],"black"))+
+  scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="20 years"), 
+               date_labels = "%Y", expand=c(0.01,0.01))+
+  labs(title="Position South Subtropical High [Max. SLP] Ens. Memb. - only oceans", y="Latitude [°]")+
+  theme_bw()+theme(legend.position = c(0.2,0.5), legend.direction = "horizontal",legend.background = element_rect(color = "black"),
+                   panel.grid = element_line(linetype="dashed",color="00"),
+                   axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+
+
+subThigh <- subThigh %>% 
+  reshape::melt(., id=c("dates")) %>% magrittr::set_colnames(., c("dates","Season","value","Memb","Dataset"))
+
+SLP.str.g <-  subThigh %>% 
+  within(., {  
+    Dataset <- factor(Dataset, levels=unique(sets$Set))
+    value <- value/100
+  }) %>% 
+  dplyr::group_by(., Dataset, dates, Season) %>%
+  dplyr::summarise(p5= quantile(value, probs = 0.05, na.rm = T),
+                   p95=quantile(value, probs= 0.95, na.rm = T),
+                   min= min(value, na.rm = T),
+                   max= max(value, na.rm = T)) %>% 
+  as.data.frame()
+
+SLP.str.ens.g <- subset(subThigh, Memb =="ensmean") %>% within(.,{
+  value <- value/100
+  Dataset <- factor(Dataset, levels=unique(sets$Set))
+})
+
+# plot of STRENGHT of the 90% uncertainty band for each subset
+ggplot() +
+  facet_wrap(. ~ Season, scales = "free_y",ncol=1)+
+  geom_vline(data= Volc, aes(xintercept=Date, linetype=variable), col="#a65628", show.legend = FALSE, alpha=0.2)+
+  geom_ribbon(data= SLP.str.g, aes(x= dates, fill=Dataset, ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
+  geom_line(data=SLP.str.ens.g, aes(x= dates, y=value, color=Dataset))+ scale_color_manual(values = c(palette[-6],"black"))+
+  scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
+               date_labels = "%Y", expand=c(0.01,0.01))+
+  labs(title="South Subtropical High [Max. SLP] Ens. Memb. - only oceans", y="SLP [hPa]")+
+  theme_bw()+theme(legend.position = c(0.2,0.5), legend.direction = "horizontal",legend.background = element_rect(color = "black"),
+                   panel.grid = element_line(linetype="dashed",color="00"),
+                   axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+
+
+
 
 ################################-
 ## probability distribution of each sub-ensemble ----
