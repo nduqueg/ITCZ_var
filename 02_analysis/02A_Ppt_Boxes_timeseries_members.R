@@ -205,7 +205,12 @@ for ( i in names(P.s)[-7] ){
     
   P.anom[[i]] <- lapply(P.s[[i]], calc.anom)
 }
-P.anom[["ModE-RAclim"]] <- P.s[["ModE-RAclim"]]
+P.anom[["ModE-RAclim"]] <- P.s[["ModE-RAclim"]] %>% lapply(., function(x){ 
+  x <- lapply(x, function(y){ 
+    colnames(y)[1] <- "dates"
+    y$dates <- as.numeric(as.character(y$dates))
+    return(y)})
+  return(x)})
 
 print("seasonal anomlaies Ensemble Means")
 for ( i in names(P.ens)[-7]){
@@ -213,66 +218,16 @@ for ( i in names(P.ens)[-7]){
   
   P.ens.anom[[i]] <- calc.anom(P.ens.s[[i]])
 }
-P.ens.anom[["ModE-RAclim"]] <- P.ens.s[["ModE-RAclim"]]
+P.ens.anom[["ModE-RAclim"]] <- P.ens.s[["ModE-RAclim"]] %>% lapply(., function(y){ 
+  colnames(y)[1] <- "dates"
+  y$dates <- as.numeric(as.character(y$dates))
+  return(y)})
 
-################################-
-# Plotting time series ----
-################################-
 
-P.anom.g <- P.anom %>% melt(., id="dates") %>% magrittr::set_colnames(.,c("dates","Region","value","Season","memb","Set")) %>% 
-  dplyr::group_by(., Set, dates, Season, Region) %>%
-  dplyr::summarise(p5= quantile(value, probs = 0.05, na.rm = T),
-                   p95=quantile(value, probs= 0.95, na.rm = T),
-                   min= min(value, na.rm = T),
-                   max= max(value, na.rm = T)) %>% 
-  as.data.frame() %>% within(., Set <- factor(Set, levels=names(P.s)))
-  
-P.ens.anom.g <- P.ens.anom %>% melt(., id="dates") %>% magrittr::set_colnames(.,c("dates","Region","value","Season","Set")) %>%
-  within(., Set <- factor(Set, levels=names(P.s)))
-
-palette <- brewer.pal(9, "Set1")[-c(6:8)]
-
-ggplot( ) +
-  facet_grid(Region ~ Season, scales = "free_y",switch="y")+
-  geom_vline(data= Volc, aes(xintercept=Date, linetype=variable), col="#a65628", show.legend = FALSE, alpha=0.4)+
-  geom_ribbon(data=P.anom.g, aes(x= dates, fill=Set,ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
-  geom_line(data=P.ens.anom.g, aes(x= dates, y=value, color=Set))+ scale_color_manual(values = c(palette[-6],"black"))+
-  scale_x_continuous(breaks = seq(1450,2000,by=50), expand=c(0.01,0.01))+
-  labs(title="Precipitation anomalies in proxies regions Ens. Memb.", y="Ppt [mm/season]")+
-  theme_bw()+theme(legend.position = "bottom", legend.direction = "horizontal",legend.background = element_rect(color = "black"),
-                   panel.grid = element_line(linetype="dashed",color="00"),
-                   axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
-
-for(i in levels(P.ens.anom.g$Region)){
-  p <- ggplot( ) +
-    facet_grid(Season ~ Region, scales = "free_y",switch="y")+
-    geom_vline(data= Volc, aes(xintercept=Date, linetype=variable), col="#a65628", show.legend = FALSE, alpha=0.4)+
-    geom_ribbon(data= subset(P.anom.g, Region==i), aes(x= dates, fill=Set,ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
-    geom_line(data= subset(P.ens.anom.g, Region==i), aes(x= dates, y=value, color=Set))+ scale_color_manual(values = c(palette[-6],"black"))+
-    scale_x_continuous(breaks = seq(1450,2000,by=50), expand=c(0.01,0.01))+
-    labs(title=paste0("Precipitation anomalies in proxies - ",i," - Ens. Memb."), y="Ppt [mm/season]")+
-    theme_bw()+theme(legend.position = "bottom", legend.direction = "horizontal",legend.background = element_rect(color = "black"),
-                     panel.grid = element_line(linetype="dashed",color="00"),
-                     axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
-  print(p)
-}
- 
-################################-
 # Plotting ModE-RAclim time series ----
 ################################-
 
 # small modification in names of subdatasets
-P.anom[["ModE-RAclim"]] <- lapply(P.anom[["ModE-RAclim"]], function(x){ 
-  x <- lapply(x, function(y){ 
-    colnames(y)[1] <- "dates"
-    y$dates <- as.numeric(y$dates)
-    return(y)})
-  return(x)})
-
-P.ens.anom[["ModE-RAclim"]] <- lapply(P.ens.anom[["ModE-RAclim"]], function(y){ 
-  colnames(y)[1] <- "dates"
-  y$dates <- as.numeric(y$dates)
-  return(y)})
 
 names(P.anom)[1:5] <- names(P.ens.anom)[1:5] <- "ModE-Sim"
 
@@ -285,8 +240,10 @@ P.anom.g <- P.anom %>% melt(., id="dates") %>% magrittr::set_colnames(.,c("dates
                    max= max(value, na.rm = T)) %>% 
   as.data.frame() %>% within(., Set <- factor(Set, levels=c("ModE-Sim","ModE-RAclim","ModE-RA")))
 
-P.ens.anom.g <- P.ens.anom %>% melt(., id="dates") %>% magrittr::set_colnames(.,c("dates","Region","value","Season","Set")) %>%
-  within(., Set <- factor(Set, levels=c("ModE-Sim","ModE-RAclim","ModE-RA")))
+P.ens.anom.g <- P.ens.anom %>% melt(., id="dates") %>% magrittr::set_colnames(.,c("dates","Region","value.ens","Season","Set")) %>%
+  dplyr::group_by(., Set, dates, Season, Region) %>%
+  dplyr::summarise(value=mean(value.ens, na.rm = T)) %>% 
+  as.data.frame() %>% within(., Set <- factor(Set, levels=c("ModE-Sim","ModE-RAclim","ModE-RA")))
 
 palette <- c("#ff7f00","#377eb8","#999999")
 
@@ -300,6 +257,7 @@ ggplot( ) +
   theme_bw()+theme(legend.position = "bottom", legend.direction = "horizontal",legend.background = element_rect(color = "black"),
                    panel.grid = element_line(linetype="dashed",color="00"),
                    axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+# 1400 x 700
 
 for(i in levels(P.ens.anom.g$Region)){
   p <- ggplot( ) +
@@ -312,5 +270,8 @@ for(i in levels(P.ens.anom.g$Region)){
     theme_bw()+theme(legend.position = "bottom", legend.direction = "horizontal",legend.background = element_rect(color = "black"),
                      panel.grid = element_line(linetype="dashed",color="00"),
                      axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
-  print(p)
+  ggsave(paste0("./pre-Figures/05_Ppt_prox_loc/05_ensMemb_Ppt_prox_Loc_",i,".png"),
+         plot=p,
+         dpi=100,width = 1400/100,height = 700/100, units = "in")
 }
+# 1400 x 700
