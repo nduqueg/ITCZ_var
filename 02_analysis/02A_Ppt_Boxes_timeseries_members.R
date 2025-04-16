@@ -276,21 +276,64 @@ for(i in levels(P.ens.anom.g$Region)){
 }
 # 1400 x 700
 
-P.anom.g <- subset(P.anom.g, Season=="DJF" & match(Region, c("EAfrMon","SAmMon","NAusMon")))
-P.ens.anom.g <- subset(P.ens.anom.g, Season=="DJF" & match(Region, c("EAfrMon","SAmMon","NAusMon")))
+Aux.g <- subset(P.anom.g, Season=="DJF" & match(Region, c("EAfrMon","SAmMon","NAusMon")) & (dates>=1775 & dates<=1875))
+Aux.ens.g <- subset(P.ens.anom.g, Season=="DJF" & match(Region, c("EAfrMon","SAmMon","NAusMon")) & (dates>=1775 & dates<=1875))
+Volc <- subset(Volc, Date >=1775 & Date <=1875)
 
 Region.labs <- c("East Africa", "South America","Australia"); names(Region.labs) <- c("EAfrMon","SAmMon","NAusMon")
 
 ggplot( ) +
   facet_wrap(.~ Region, scales = "free_y",nrow=3, labeller = labeller(Region= Region.labs))+
   geom_vline(data= Volc, aes(xintercept=Date, linetype=variable), col="#a65628", show.legend = FALSE, alpha=0.4)+
-  geom_ribbon(data= P.anom.g, aes(x= dates, fill=Set,ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
-  geom_line(data= P.ens.anom.g, aes(x= dates, y=value, color=Set))+ scale_color_manual(values = c( palette[-3],"black"))+
+  geom_ribbon(data= Aux.g, aes(x= dates, fill=Set,ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
+  geom_line(data= Aux.ens.g, aes(x= dates, y=value, color=Set))+ scale_color_manual(values = c( palette[-3],"black"))+
   scale_x_continuous(breaks = seq(1450,2000,by=50), expand=c(0.01,0.01))+
   labs(title=paste0("Precipitation anomalies for southern monsoons in DJF - Ens. Memb."), y="Ppt [mm/season]", x="year")+
   theme_bw()+theme(legend.position = c(0.2,0.34), legend.direction = "horizontal",legend.background = element_rect(color = "black"),
                    strip.text = element_text(size=15),
                    panel.grid = element_line(linetype="dashed",color="00"),
                    axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
-ggsave(paste0("/home/nduque/Documents/2025_PAGES/Ppt_proxies_loc.png"),
+ggsave(paste0("/scratch2/nduque/z_2025_PAGES/Ppt_ITCZ_proxies_loc.png"),
        dpi=300,width = 1400*3/300,height = 700*3/300, units = "in")
+
+
+Aux.g <- subset(P.anom.g, Season=="DJF" & match(Region, c("EAfrMon","SESAme","SEastAus")) & (dates>=1775 & dates<=1875))
+Aux.ens.g <- subset(P.ens.anom.g, Season=="DJF" & match(Region, c("EAfrMon","SESAme","SEastAus")) & (dates>=1775 & dates<=1875))
+Volc <- subset(Volc, Date >=1775 & Date <=1875)
+
+Region.labs <- c("South Africa", "SE South America","South East Australia"); names(Region.labs) <- c("EAfrMon","SESAme","SEastAus")
+
+ggplot( ) +
+  facet_wrap(.~ Region, scales = "free_y",nrow=3, labeller = labeller(Region= Region.labs))+
+  geom_vline(data= Volc, aes(xintercept=Date, linetype=variable), col="#a65628", show.legend = FALSE, alpha=0.4)+
+  geom_ribbon(data= Aux.g, aes(x= dates, fill=Set,ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
+  geom_line(data= Aux.ens.g, aes(x= dates, y=value, color=Set))+ scale_color_manual(values = c( palette[-3],"black"))+
+  scale_x_continuous(breaks = seq(1450,2000,by=50), expand=c(0.01,0.01))+
+  labs(title=paste0("South Subtropical highs - Precipitation anomalies in DJF - Ens. Memb."), y="Ppt [mm/season]", x="year")+
+  theme_bw()+theme(legend.position = c(0.2,0.34), legend.direction = "horizontal",legend.background = element_rect(color = "black"),
+                   strip.text = element_text(size=15),
+                   panel.grid = element_line(linetype="dashed",color="00"),
+                   axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+ggsave(paste0("/scratch2/nduque/z_2025_PAGES/Ppt_SSubTropHigh_proxies_loc.png"),
+       dpi=300,width = 1200*3/300,height = 700*3/300, units = "in")
+
+
+Aux.g <- subset(P.anom.g, Season=="JJA" & match(Region, c("EAfrMon","SESAme","SEastAus")) & (dates>=1775 & dates<=1875))
+Aux.ens.g <- subset(P.ens.anom.g, Season=="JJA" & match(Region, c("EAfrMon","SESAme","SEastAus")) & (dates>=1775 & dates<=1875))
+Volc <- subset(Volc, Date >=1775 & Date <=1875)
+
+Region.labs <- c("South Africa", "SE South America","South East Australia"); names(Region.labs) <- c("EAfrMon","SESAme","SEastAus")
+
+ggplot( ) +
+  facet_wrap(.~ Region, scales = "free_y",nrow=3, labeller = labeller(Region= Region.labs))+
+  geom_vline(data= Volc, aes(xintercept=Date, linetype=variable), col="#a65628", show.legend = FALSE, alpha=0.4)+
+  geom_ribbon(data= Aux.g, aes(x= dates, fill=Set,ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
+  geom_line(data= Aux.ens.g, aes(x= dates, y=value, color=Set))+ scale_color_manual(values = c( palette[-3],"black"))+
+  scale_x_continuous(breaks = seq(1450,2000,by=50), expand=c(0.01,0.01))+
+  labs(title=paste0("South Subtropical highs - Precipitation anomalies in JJA - Ens. Memb."), y="Ppt [mm/season]", x="year")+
+  theme_bw()+theme(legend.position = c(0.2,0.34), legend.direction = "horizontal",legend.background = element_rect(color = "black"),
+                   strip.text = element_text(size=15),
+                   panel.grid = element_line(linetype="dashed",color="00"),
+                   axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+ggsave(paste0("/scratch2/nduque/z_2025_PAGES/Ppt_SSubTropHigh_JJA.png"),
+       dpi=300,width = 1200*3/300,height = 700*3/300, units = "in")

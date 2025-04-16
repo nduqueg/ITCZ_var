@@ -62,6 +62,11 @@ seasons <- c("DJF","JJA")
 ################################-
 ## load data ----
 ################################-
+Volc <- read.csv("./01_Data/Volcanic_erup.csv")[,-1] %>% 
+  melt() %>% 
+  dplyr::mutate(Date= paste0(value,"-01-01") %>% as.Date(),
+                variable = factor(variable, levels =c("Fischer","VEI5")))
+
 Omega <<- list() 
 for(i in unique(sets$Set)) Omega[[i]] <- list()
 
@@ -304,6 +309,89 @@ ggplot() +
   theme_bw()+theme(legend.position = c(0.2,0.5), legend.direction = "horizontal",legend.background = element_rect(color = "black"),
                    panel.grid = element_line(linetype="dashed",color="lightgrey"),
                    axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+
+######################-
+# plotting ModE-Sim together ----
+###################-
+load("./01_Data/02_Omega500/_allMemb_LocStrAsc.Rdata")
+load("./01_Data/02_Omega500/_allMemb_StrAsc.Rdata")
+
+names(loc.strAsc)[1:5] <- names(strAsc)[1:5] <- "ModE-Sim"
+
+loc.strAsc <- loc.strAsc %>% 
+  reshape::melt(., id=c("dates")) %>% magrittr::set_colnames(., c("dates","Season","value","Memb","Dataset"))
+
+Omega.loc.g <- subset(loc.strAsc, Memb !="ensmean") %>% 
+  dplyr::group_by(., Dataset, dates, Season) %>%
+  dplyr::summarise(p5= quantile(value, probs = 0.05, na.rm = T),
+                   p95=quantile(value, probs= 0.95, na.rm = T),
+                   min= min(value, na.rm = T),
+                   max= max(value, na.rm = T)) %>% 
+  as.data.frame() %>% within(., Dataset <- factor(Dataset, levels=c("ModE-Sim","ModE-RAclim","ModE-RA")))
+
+Omega.loc.ens.g <- subset(loc.strAsc, Memb =="ensmean") %>%
+  dplyr::group_by(., Dataset, dates, Season) %>%
+  dplyr::summarise(value.ens=mean(value, na.rm=T)) %>% 
+  as.data.frame()%>% within(., Dataset <- factor(Dataset, levels=c("ModE-Sim","ModE-RAclim","ModE-RA")))
+
+palette <- c("#ff7f00","#999999")
+
+# plot of LOCATION of the 90% uncertainty bands for each subset
+ggplot( ) +
+  geom_vline(data= Volc, aes(xintercept=Date, linetype=variable), col="blue", show.legend = FALSE, alpha=0.4)+
+  geom_ribbon(data=subset(Omega.loc.g, Season=="DJF"),
+              aes(x= dates, fill=Dataset,ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
+  geom_line(data=subset(Omega.loc.ens.g, Season=="DJF"),
+            aes(x= dates, y=value.ens, color=Dataset))+ scale_color_manual(values = c(palette[-2],"black"))+
+  scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
+               date_labels = "%Y", expand=c(0.01,0.01))+
+  labs(title="Position Strong Ascent in DJF [Min. Omega 500 hPa] Ens. Memb.", y="Latitude [°]", x="Year")+
+  theme_bw()+theme(legend.position = c(0.3,0.9), legend.direction = "horizontal",
+                   panel.grid = element_line(linetype="dashed",color="00"),
+                   axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+
+ggsave(paste0("/scratch2/nduque/z_2025_PAGES/Loc_StrAsc.png"),
+       dpi=300,width = 1200*3/300,height = 350*3/300, units = "in")
+
+strAsc <- strAsc %>% 
+  reshape::melt(., id=c("dates")) %>% magrittr::set_colnames(., c("dates","Season","value","Memb","Dataset"))
+
+Omega.str.g <-  strAsc %>% 
+  within(., {  
+    Dataset <- factor(Dataset, levels=c("ModE-Sim","ModE-RAclim","ModE-RA"))
+    value <- value*100
+  }) %>% 
+  dplyr::group_by(., Dataset, dates, Season) %>%
+  dplyr::summarise(p5= quantile(value, probs = 0.05, na.rm = T),
+                   p95=quantile(value, probs= 0.95, na.rm = T),
+                   min= min(value, na.rm = T),
+                   max= max(value, na.rm = T)) %>% 
+  as.data.frame()
+
+Omega.str.ens.g <- subset(strAsc, Memb =="ensmean") %>% 
+  dplyr::group_by(., Dataset, dates, Season) %>%
+  dplyr::summarise(value.ens=mean(value, na.rm=T)) %>% 
+  within(.,{
+  value.ens <- value.ens*100
+  Dataset <- factor(Dataset, levels=c("ModE-Sim","ModE-RAclim","ModE-RA"))
+})
+
+# plot of STRENGHT of the 90% uncertainty band for each subset
+ggplot() +
+  geom_vline(data= Volc, aes(xintercept=Date, linetype=variable), col="blue", show.legend = FALSE, alpha=0.4)+
+  geom_ribbon(data= subset(Omega.str.g, Season=="DJF"), 
+              aes(x= dates, fill=Dataset, ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
+  geom_line(data=subset(Omega.str.ens.g, Season=="DJF"),
+            aes(x= dates, y=value.ens, color=Dataset))+ scale_color_manual(values = c(palette[-2],"black"))+
+  scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
+               date_labels = "%Y", expand=c(0.01,0.01))+
+  scale_y_continuous(transform = "reverse")+
+  labs(title="Strong Ascent [Min. Omega 500 hPa] Ens. Memb.", y="Omega 500 hPa [hPa/s]")+
+  theme_bw()+theme(legend.position = c(0.15,0.9), legend.direction = "horizontal",legend.background = element_rect(color = "black"),
+                   panel.grid = element_line(linetype="dashed",color="00"),
+                   axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+ggsave(paste0("/scratch2/nduque/z_2025_PAGES/StrAsc.png"),
+       dpi=300,width = 1200*3/300,height = 350*3/300, units = "in")
 
 ################################-
 ## probability distribution of each sub-ensemble ----
