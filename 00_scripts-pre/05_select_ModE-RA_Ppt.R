@@ -27,7 +27,7 @@ Memb <- paste0("m0",seq(41,60, by=1))
 
 # calculate the zonal mean
 setwd(paste0(dir.base,"./01_Data/05_Ppt/"))
-numCores <- 20
+numCores <- 10
 cl <- makeSOCKcluster(numCores)
 registerDoSNOW(cl)
 
@@ -42,7 +42,7 @@ results <- foreach ( i = 1:length(Memb), .combine=rbind, .options.snow=opts) %do
   
   if( !dir.exists(Set)) dir.create(Set)
   
-  cdo.cmd <- paste0("cdo zonmean ",dir.data.ModERA,Set,"/abs/",Memb[i],"/by_var/mon/ModE-RA_",Set,"_",Memb[i],"_totprec_abs_1421-2008_mon.nc ",
+  cdo.cmd <- paste0("cdo chunit,'kg m-2 s-1','mm/month' -mulc,86400 -muldpm -zonmean ",dir.data.ModERA,Set,"/abs/",Memb[i],"/by_var/mon/ModE-RA_",Set,"_",Memb[i],"_totprec_abs_1421-2008_mon.nc ",
                                    "./",Set,"/ModE-RA_",Set,"_",Memb[i],"_totprec-ZonMean_1421-2008_mon.nc")
   system(cdo.cmd)
 }
@@ -52,7 +52,7 @@ stopCluster(cl)
 # zonal mean for the general ensemble ----
 ################################-
 
-cdo.cmd <- paste0("cdo zonmean ",dir.data.ModERA,Set,"/abs/ensstat/by_var/mon/ModE-RA_lowres_20mem_Set_1420-3_1850-1_ensmean_totprec_abs_1421-2008_mon.nc ",
+cdo.cmd <- paste0("cdo chunit,'kg m-2 s-1','mm/month' -mulc,86400 -muldpm -zonmean ",dir.data.ModERA,Set,"/abs/ensstat/by_var/mon/ModE-RA_lowres_20mem_Set_1420-3_1850-1_ensmean_totprec_abs_1421-2008_mon.nc ",
                   "ModE-RA_lowres_20mem_Set_1420-3_1850-1_totprec-ZonMean_1421-2008_mon.nc")
 system(cdo.cmd)
 

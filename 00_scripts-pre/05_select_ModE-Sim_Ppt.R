@@ -62,7 +62,7 @@ results <- foreach ( i = 1:nrow(sets), .combine=rbind, .options.snow=opts) %dopa
   iEpoch <- sets[i,"Epoch"]
   Per <- Epoch[[iEpoch]] %>% paste0(.,"-",tail(.,1)) %>% .[1]
   
-  cdo.cmd <- with(sets[i,], paste0("cdo zonmean ",dir.data.ModEsim,Set,"/abs/",Memb,"/by_var/mon/ModE-Sim_",Set,"_",Memb,"_totprec_abs_",Per,"_mon.nc ",
+  cdo.cmd <- with(sets[i,], paste0("cdo chunit,'kg m-2 s-1','mm/month' -mulc,86400 -muldpm -zonmean ",dir.data.ModEsim,Set,"/abs/",Memb,"/by_var/mon/ModE-Sim_",Set,"_",Memb,"_totprec_abs_",Per,"_mon.nc ",
                                    "./",sets$Set[i],"/ModE-Sim_",Set,"_",Memb,"_totprec-ZonMean_",Per,"_mon.nc"))
   system(cdo.cmd)
 }
@@ -72,11 +72,11 @@ stopCluster(cl)
 # zonal mean for the general ensemble ----
 ################################-
 
-cdo.cmd <- paste0("cdo zonmean ",dir.data.ModEsim,"set_1420-1_to_3/abs/ensstat/by_var/mon/ModE-Sim_set_1420-1_to_3_ensmean_totprec_abs_1420-1849_mon.nc ",
+cdo.cmd <- paste0("cdo chunit,'kg m-2 s-1','mm/month' -mulc,86400 -muldpm -zonmean ",dir.data.ModEsim,"set_1420-1_to_3/abs/ensstat/by_var/mon/ModE-Sim_set_1420-1_to_3_ensmean_totprec_abs_1420-1849_mon.nc ",
                   "ModE-Sim_set_1420-1_to_3_totprec-ZonMean_1420-1849_mon.nc")
 system(cdo.cmd)
 
-cdo.cmd <- paste0("cdo zonmean ",dir.data.ModEsim,"set_1850-1_to_2/abs/ensstat/by_var/mon/ModE-Sim_set_1850-1_to_2_ensmean_totprec_abs_1850-2009_mon.nc ",
+cdo.cmd <- paste0("cdo chunit,'kg m-2 s-1','mm/month' -mulc,86400 -muldpm -zonmean ",dir.data.ModEsim,"set_1850-1_to_2/abs/ensstat/by_var/mon/ModE-Sim_set_1850-1_to_2_ensmean_totprec_abs_1850-2009_mon.nc ",
                   "ModE-Sim_set_1850-1_to_2_totprec-ZonMean_1850-2009_mon.nc")
 system(cdo.cmd)
 
@@ -107,7 +107,7 @@ epoch.lim <- c(rep("1420-1849",3), rep("1850-2009",2))
 for ( i in sets.names){
   epoch.years <- which(i == sets.names) %>% epoch.lim[.]
   
-  cdo.cmd <- paste0("cdo zonmean ",dir.data.ModEsim, i,"/abs/ensstat/by_var/mon/ModE-Sim_",i,"_ensmean_totprec_abs_",epoch.years,"_mon.nc ",
+  cdo.cmd <- paste0("cdo chunit,'kg m-2 s-1','mm/month' -mulc,86400 -muldpm -zonmean ",dir.data.ModEsim, i,"/abs/ensstat/by_var/mon/ModE-Sim_",i,"_ensmean_totprec_abs_",epoch.years,"_mon.nc ",
                     "./",i,"/ModE-Sim_",i,"_ensmean_totprec-ZonMean_",epoch.years,"_mon.nc")
   system(cdo.cmd)
   
