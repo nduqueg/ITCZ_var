@@ -149,8 +149,14 @@ DJF_JJA <- function( P){
   
   Memb <- list()
   
-  Memb$DJF <- P %>% read.zoo(., index.column=1) %>% dm2seasonal(., "DJF", FUN=sum, na.rm=T) %>% fortify.zoo()
-  Memb$JJA <- P %>% read.zoo(., index.column=1) %>% dm2seasonal(., "JJA", FUN=sum, na.rm=T) %>% fortify.zoo()
+  Memb$DJF <- P %>% read.zoo(., index.column=1) %>% dm2seasonal(., "DJF", FUN=mean, na.rm=T) %>% fortify.zoo()
+  Memb$JJA <- P %>% read.zoo(., index.column=1) %>% dm2seasonal(., "JJA", FUN=mean, na.rm=T) %>% fortify.zoo()
+  Memb$JJA <- within(Memb$JJA, Index <- Index %>% as.numeric())
+  
+  Memb <- lapply(Memb, function(z){
+    y <- sweep(z, 2, c(1, rep(3, ncol(z)-1)), `*`)
+    return(y)
+    })
   
   return(Memb)
 }
@@ -276,8 +282,8 @@ for(i in levels(P.ens.anom.g$Region)){
 }
 # 1400 x 700
 
-Aux.g <- subset(P.anom.g, Season=="DJF" & match(Region, c("EAfrMon","SAmMon","NAusMon")) & (dates>=1775 & dates<=1875))
-Aux.ens.g <- subset(P.ens.anom.g, Season=="DJF" & match(Region, c("EAfrMon","SAmMon","NAusMon")) & (dates>=1775 & dates<=1875))
+Aux.g <- subset(P.anom.g, Season=="DJF" & match(Region, c("EAfrMon","SAmMon","NAusMon")))
+Aux.ens.g <- subset(P.ens.anom.g, Season=="DJF" & match(Region, c("EAfrMon","SAmMon","NAusMon")) )
 Volc <- subset(Volc, Date >=1775 & Date <=1875)
 
 Region.labs <- c("East Africa", "South America","Australia"); names(Region.labs) <- c("EAfrMon","SAmMon","NAusMon")
