@@ -71,11 +71,6 @@ a <- read_Mod(f.mod= "./01_Data/05_Ppt/set_1850-2/ModE-Sim_set_1850-2_ensmean_to
 a <- read_Mod(f.mod= "./01_Data/05_Ppt/ModE-RA_lowres_20mem_Set_1420-3_1850-1_totprec-ZonMean_1421-2008",
               Set="ModE-RA")
 
-Ppt <- lapply(Ppt, function(set.ppt) lapply(set.ppt, function(x){
-  y <- x * 86400 * 30 # transform units to mm/month
-  return(y)
-}))
-
 ################################-
 # Maximum and mean zonal precipitation in the tropics ----
 ################################-
