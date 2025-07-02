@@ -337,11 +337,24 @@ Omega.loc.ens.g <- subset(loc.strAsc, Memb =="ensmean") %>%
 palette <- c("#ff7f00","#999999")
 
 # plot of LOCATION of the 90% uncertainty bands for each subset
+# ggplot( ) +
+#   geom_vline(data= Volc, aes(xintercept=Date, linetype=variable), col="blue", show.legend = FALSE, alpha=0.4)+
+#   geom_ribbon(data=subset(Omega.loc.g, Season=="DJF"),
+#               aes(x= dates, fill=Dataset,ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
+#   geom_line(data=subset(Omega.loc.ens.g, Season=="DJF"),
+#             aes(x= dates, y=value.ens, color=Dataset))+ scale_color_manual(values = c(palette[-2],"black"))+
+#   scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
+#                date_labels = "%Y", expand=c(0.01,0.01))+
+#   labs(title="Position Strong Ascent in DJF [Min. Omega 500 hPa] Ens. Memb.", y="Latitude [°]", x="Year")+
+#   theme_bw()+theme(legend.position = c(0.3,0.9), legend.direction = "horizontal",
+#                    panel.grid = element_line(linetype="dashed",color="00"),
+#                    axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+
 ggplot( ) +
   geom_vline(data= Volc, aes(xintercept=Date, linetype=variable), col="blue", show.legend = FALSE, alpha=0.4)+
-  geom_ribbon(data=subset(Omega.loc.g, Season=="DJF"),
+  geom_errorbar(data=subset(Omega.loc.g, Season=="DJF"),
               aes(x= dates, fill=Dataset,ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
-  geom_line(data=subset(Omega.loc.ens.g, Season=="DJF"),
+  geom_point(data=subset(Omega.loc.ens.g, Season=="DJF"),
             aes(x= dates, y=value.ens, color=Dataset))+ scale_color_manual(values = c(palette[-2],"black"))+
   scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
                date_labels = "%Y", expand=c(0.01,0.01))+
@@ -350,7 +363,7 @@ ggplot( ) +
                    panel.grid = element_line(linetype="dashed",color="00"),
                    axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
 
-ggsave(paste0("/scratch2/nduque/z_2025_PAGES/Loc_StrAsc.png"),
+ggsave(paste0("/scratch2/nduque/z_2025_PAGES/Loc_StrAsc2.png"),
        dpi=300,width = 1200*3/300,height = 350*3/300, units = "in")
 
 strAsc <- strAsc %>% 

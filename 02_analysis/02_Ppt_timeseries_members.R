@@ -444,7 +444,7 @@ ggplot( ) +
   geom_ribbon(data=Memb.anom.g, aes(x= dates, fill=Dataset,ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
   geom_line(data=Ens.anom.g,aes(x= dates, y= value.m, col=Dataset))+ scale_color_manual(values = c(palette[-3],"black"))+
   scale_x_continuous(breaks = seq(1450,2000,by=50 ),  expand=c(0.01,0.01))+
-  labs(title="Anomalies zonal tropical Precipitation in bands ", y="Ppt  [mm/season]")+
+  labs(title="Anomalies zonal tropical Precipitation in bands ", y="Ppt anomalies [mm/season]")+
   theme_bw()+theme(legend.position = c(0.7,0.05), legend.direction = "horizontal",
                    panel.grid = element_blank(),
                    strip.text = element_text(size=12),
@@ -459,7 +459,7 @@ ggplot( ) +
   geom_line(data=Ens.anom.g %>% subset(., Season=="DJF"),
             aes(x= dates, y= value.m, col=Dataset))+ scale_color_manual(values = c(palette[-3],"black"))+
   scale_x_continuous(breaks = seq(1450,2000,by=50 ),  expand=c(0.01,0.01))+
-  labs(title="Anomalies zonal tropical Precipitation in DJF ", y="Ppt  [mm/season]")+
+  labs(title="Anomalies zonal tropical Precipitation in DJF ", y="Ppt anomalies [mm/season]")+
   theme_bw()+theme(legend.position = c(0.2,0.4), legend.direction = "horizontal",
                    panel.grid = element_blank(),
                    strip.text = element_text(size=12),
