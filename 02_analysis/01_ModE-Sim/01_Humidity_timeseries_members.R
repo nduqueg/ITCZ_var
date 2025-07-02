@@ -121,8 +121,8 @@ for (i in 1:nrow(sets.ens)){
 
 # create the delta pressures for the vertical integral
 d.lev <- (lev - c(lev[ -1], 0))
-d.lev[-1] <- d.lev[-length(d.lev)]/2 + d.lev[-1]/2
-d.lev[1] <- d.lev[1]/2
+# d.lev[-1] <- d.lev[-length(d.lev)]/2 + d.lev[-1]/2
+# d.lev[1] <- d.lev[1]
 
 VIM <- function(x, d.lev){
   
@@ -259,7 +259,7 @@ ggplot() +
   scale_color_manual(values = palette)+
   scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
                date_labels = "%Y", expand=c(0.01,0.01))+
-  coord_cartesian(ylim=c(33,36.5))+
+  coord_cartesian(ylim=c(43.5,48))+
   
   labs(title="Variability of tropical humidity in DJF |lat|>=30° - Subsets Ens. ", y="Vert. Int. Hum. [kg/m2]")+
   theme_bw()+theme(legend.position = c(0.3,0.84), legend.direction = "horizontal",legend.background = element_rect(color = "black"),

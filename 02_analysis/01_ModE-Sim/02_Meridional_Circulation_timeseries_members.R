@@ -55,6 +55,11 @@ seasons <- c("DJF","JJA")
 ################################-
 ## load data ----
 ################################-
+Volc <- read.csv("./01_Data/Volcanic_erup.csv")[,-1] %>% 
+  melt() %>% 
+  dplyr::mutate(Date= paste0(value,"-01-01") %>% as.Date(),
+                variable = factor(variable, levels =c("Fischer","VEI5")))
+
 mastrf <<- list()
 for (i in unique(sets$Set)) mastrf[[i]] <- list()
 
@@ -245,6 +250,7 @@ save(Mastrf.prop,file="./01_Data/01_Streamfunction/_allMemb_Prop_MastrFu.Rdata")
 ################################-
 ## plotting features timeseries ----
 ################################-
+
 load("./01_Data/01_Streamfunction/_allMemb_Prop_MastrFu.Rdata")
 
 Mastrf.prop <- Mastrf.prop %>% 
@@ -302,5 +308,35 @@ ggplot( ) +
   labs(title="ITCZ strength - ModE-Sim Ens. Memb.", y="stregnth [Pa/s]")+
   theme_bw()+theme(legend.position = "bottom", legend.direction = "horizontal",
                    panel.grid = element_line(linetype="dashed",color="lightgrey"),
+                   strip.text = element_text(size=12),
+                   axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
+
+
+
+mastrf.loc.g <- Mastrf.prop %>% 
+  subset(., Memb !="ensmean" & variable %in% c("lat.Max","lat.Min")) %>% 
+  dplyr::group_by(., Dataset, dates, Season, variable) %>%
+  dplyr::summarise(p5= quantile(value, probs = 0.05, na.rm = T),
+                   p95=quantile(value, probs= 0.95, na.rm = T),
+                   min= min(value, na.rm = T),
+                   max= max(value, na.rm = T)) %>% 
+  as.data.frame() %>% within(., Dataset <- factor(Dataset, levels=unique(sets$Set)))
+
+mastrf.loc.ens.g <- Mastrf.prop %>% 
+  subset(., Memb =="ensmean" & variable %in% c("lat.Max","lat.Min")) %>%
+  within(., Dataset <- factor(Dataset, levels=unique(sets$Set)))
+
+Volc <- within(Volc, Terup <- variable) %>% subset(., select=-variable)
+
+ggplot( ) +
+  facet_wrap(. ~ variable, scales = "free_y", ncol=1)+
+  geom_vline(data= Volc, aes(xintercept=Date, linetype=Terup), col="#a65628", show.legend = FALSE, alpha=0.4)+
+  geom_ribbon(data=mastrf.loc.g %>% subset(., Season=="DJF"), aes(x= dates, fill=Dataset,ymin=p5,ymax=p95), alpha=0.3)+ scale_fill_manual(values = palette)+
+  geom_line(data=mastrf.loc.ens.g %>% subset(., Season=="DJF"), aes(x= dates, y=value, color=Dataset))+ scale_color_manual(values = c(palette[-6],"black"))+
+  scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
+               date_labels = "%Y", expand=c(0.01,0.01))+
+  labs(title="ITCZ edges in DJF - ModE-Sim Ens. Memb.", y="Latitude [°]")+
+  theme_bw()+theme(legend.position = "bottom", legend.direction = "horizontal",
+                   panel.grid = element_line(linetype="dashed",color="00"),
                    strip.text = element_text(size=12),
                    axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))

@@ -31,7 +31,7 @@ sets <- data.frame( Set= paste0("set_",rep(1420,3),"-",seq(1,3)) %>% rep(.,each=
         )
 
 # time periods for each member
-Epoch <- list(Epoch1 = seq(1420,1849), Epoch2= seq(1850,2009))
+Epoch <- list(Epoch1 = seq(1420,1850), Epoch2= seq(1850,2009))
 
 ################################-
 ## fetch Meridional streamfunction ----
