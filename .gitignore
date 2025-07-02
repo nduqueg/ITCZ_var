@@ -4,5 +4,7 @@
 .Ruserdata
 
 *_mon.nc
+*_seasonal.nc
+dp.nc
 
 # pre-Figures/
