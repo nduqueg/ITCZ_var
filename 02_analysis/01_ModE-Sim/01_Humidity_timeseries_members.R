@@ -253,18 +253,18 @@ ggplot() +
 
 
 ggplot() +
-  geom_vline(data= Volc, aes(xintercept=Date, linetype=variable), col="#a65628", show.legend = FALSE, alpha=0.4)+
-  geom_ribbon(data= subset(Hum.trop.g, Season=="DJF"), aes(x= dates, fill=Dataset,ymin=p5,ymax=p95), alpha=0.2)+ scale_fill_manual(values = palette)+
-  geom_line(data= subset(Hum.trop.ens.g, Season=="DJF"), aes(x= dates, y= value, col=Dataset))+
+  geom_vline(data= Volc %>% subset(., Date>=as.Date("1780-01-01") & Date<=as.Date("1849-01-01")), aes(xintercept=Date, linetype=variable), col="#a65628", show.legend = FALSE, alpha=0.4)+
+  geom_ribbon(data= subset(Hum.trop.g, Season=="JJA" & dates>=as.Date("1780-01-01") & dates<=as.Date("1849-01-01")), aes(x= dates, fill=Dataset,ymin=p5,ymax=p95), alpha=0.2)+ scale_fill_manual(values = palette)+
+  geom_line(data= subset(Hum.trop.ens.g, Season=="JJA" & dates>=as.Date("1780-01-01") & dates<=as.Date("1849-01-01")), aes(x= dates, y= value, col=Dataset))+
   scale_color_manual(values = palette)+
-  scale_x_date(breaks = seq(as.Date("1450-01-01"),as.Date("2000-01-01"),by="50 years"), 
+  scale_x_date(breaks = seq(as.Date("1780-01-01"),as.Date("1850-01-01"),by="10 years"), 
                date_labels = "%Y", expand=c(0.01,0.01))+
   coord_cartesian(ylim=c(43.5,48))+
   
-  labs(title="Variability of tropical humidity in DJF |lat|>=30° - Subsets Ens. ", y="Vert. Int. Hum. [kg/m2]")+
+  labs(title="Variability of tropical humidity in JJA |lat|>=30° - Subsets Ens. ", y="Vert. Int. Hum. [kg/m2]")+
   theme_bw()+theme(legend.position = c(0.3,0.84), legend.direction = "horizontal",legend.background = element_rect(color = "black"),
                    panel.grid = element_line(linetype="dashed",color="00"),
                    axis.ticks.length=unit(-4, "pt"), axis.text.x = element_text(margin=margin(2,5,5,5),vjust = -1, size=12), axis.text.y = element_text(margin=margin(0,5,5,0,"pt"),size=12))
 
-ggsave(paste0("/scratch2/nduque/z_2025_PAGES/Trop_Hum_Zon-mean.png"),
+ggsave(paste0("/scratch2/nduque/z_2025_PAGES/Trop_Hum_Zon-mean_JJA.png"),
        dpi=300,width = 1200*3/300,height = 350*3/300, units = "in")

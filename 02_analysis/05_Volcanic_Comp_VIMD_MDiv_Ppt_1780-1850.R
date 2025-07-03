@@ -232,7 +232,7 @@ ggplot()+
               aes(x=lon,y=lat,fill=Ppt))+
   scale_fill_stepsn(colours=brewer.pal(11,"BrBG"), breaks=at.m,
                     limits=c(min(at.m),max(at.m)), guide=guide_colorsteps(barheight=unit(10,"cm")),
-                    name="Ppt [mm/season]")+
+                    name="ModE-RA Ppt\n[mm/season]")+
   
   geom_contour(data=data.mdiv %>% subset(., data.class==T & Season =="JJA"), 
                aes(lon,lat, z=MDiv),color="red",binwidth =200,linewidth=0.35)+ #  linetype=1,

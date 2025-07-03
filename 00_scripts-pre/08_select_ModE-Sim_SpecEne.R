@@ -62,7 +62,7 @@ for ( i in 1:nrow(sets)){ # run each one of the sets and members
   progress <- function(n) setTxtProgressBar(pb, n)
   opts <- list(progress=progress)
   
-  # processing each year
+  # processing each year, /by_year/ directory
   
   # Cp= 1005 J/(kg*K);  Lv= 2256400 J/kg
   # operation <- "expr,'E= (1005)*t + (2256.4)*q + 9.80665*geopoth + (u^2+v^2)/2; v=v; u=u' -selname,u,v,t,q,geopoth"
