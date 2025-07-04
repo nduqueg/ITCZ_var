@@ -72,7 +72,7 @@ l.comp <- c(which(Years == 1783),
             which(Years == 1810),
             which(Years == 1816),
             which(Years == 1823),
-            which(Years == 1832),
+            which(Years == 1833),
             which(Years == 1836))
 eruptions <- c("Laki","unknown","Tambora","Galanggung","Zavaritskii","Cosigüina")
 clim <- which(Years >= 1730 & Years <= 1780)
@@ -168,8 +168,13 @@ xlim <- c(-85,-31); ylim <- c(-23,18)
 range <- 200
 at.m <- seq(-range,range,length.out = 11) %>% round(.,2); at.m.v <- (at.m[-length(at.m)] - at.m[-1])/2 + at.m[-1]
 
+
+Period.labs <- c("Laki (1783)","unknown (1808)","Tambora (1815)","Galanggung (1822)","Zavaritskii (1931)","Cosigüina (1935)")
+names(Period.labs) <- eruptions <- c("Laki","unknown","Tambora","Galanggung","Zavaritskii","Cosigüina")
+
+
 ggplot()+
-  facet_wrap(.~ Period, ncol=3)+
+  facet_wrap(.~ Period, ncol=3, labeller = labeller(Period=Period.labs))+
   geom_raster(data= data.Ppt %>% subset(., Season=="JJA"),
               aes(x=lon,y=lat,fill=Ppt))+
   scale_fill_stepsn(colours=brewer.pal(11,"BrBG"), breaks=at.m,
@@ -181,13 +186,13 @@ ggplot()+
   geom_contour(data=data.mdiv %>% subset(., data.class==F & Season =="JJA"), 
                aes(lon,lat, z=MDiv),color="blue",binwidth =200,linewidth=0.35)+ 
   
-  geom_polygon(data=basins,aes(x=long,y=lat, group=group), colour="black",fill="NA",size=0.25)+
+  geom_polygon(data=basins,aes(x=long,y=lat, group=group), colour="black",fill="NA",linewidth=0.25)+
   geom_vector(data= data.g %>% subset(., Season =="JJA"), 
               aes(x=lon,y=lat,angle=Angle, mag=Mag), pivot=0.5, skip = 1, col="purple4")+
   scale_mag(name="VIMF", limits=c(0,100))+
   coord_fixed(xlim=xlim,ylim=ylim)+
   labs(x="Longitude [°]",y="Latitude [°]",title= "Year after the volcanic eruption respect the period 1730-1780, JJA")+
-  theme_bw()+theme(legend.position = "bottom", strip.text = element_text(size=14))
+  theme_bw()+theme(legend.position = "none", strip.text = element_text(size=14))
 ggsave("10_VIMF_MDiv_ind_eruptions.png",
        dpi=300,width = 1400*3/300,height = 850*3/300, units = "in")
 
@@ -231,7 +236,7 @@ ggplot()+
   geom_raster(data= data.Ppt %>% subset(., Season=="JJA"),
               aes(x=lon,y=lat,fill=Ppt))+
   scale_fill_stepsn(colours=brewer.pal(11,"BrBG"), breaks=at.m,
-                    limits=c(min(at.m),max(at.m)), guide=guide_colorsteps(barheight=unit(10,"cm")),
+                    limits=c(min(at.m),max(at.m)), guide=guide_colorsteps(barwidth=unit(7,"cm")),
                     name="ModE-RA Ppt\n[mm/season]")+
   
   geom_contour(data=data.mdiv %>% subset(., data.class==T & Season =="JJA"), 
@@ -245,6 +250,6 @@ ggplot()+
   scale_mag(name="VIMF", limits=c(0,100))+
   coord_fixed(xlim=xlim,ylim=ylim)+
   labs(x="Longitude [°]",y="Latitude [°]",title= "Composite Year after the six volcanic eruptions, JJA", subtitle="Anomalies respect the period 1730-1780")+
-  theme_bw()+
+  theme_bw()+theme(legend.position = "bottom")
 ggsave("11_VIMF_MDiv_Comp_eruptions.png",
        dpi=300,width = 800*3/300,height = 850*3/300, units = "in")
