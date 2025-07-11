@@ -22,6 +22,11 @@ Season.y <- paste0(years.m[-1] ,"-",time2season(Dates.a)[-length(Dates.a)]) %>% 
 Year.s <- unique(Season.y)
 
 ## load data -----
+Volc <- read.csv("./01_Data/Volcanic_erup.csv")[,-1] %>% 
+  melt() %>% 
+  within(., variable <- factor(variable, levels =c("Fischer","VEI5"))) %>% 
+  magrittr::set_colnames(.,c("variable","Date"))
+
 cdo.cmd <- "cdo seasmean -zonmean ./01_Data/09_VIEnerTrans/ModE-Sim_set_1420-1_to_3_ensmean_VITEFnorth_1420-1849_mon.nc ./01_Data/09_VIEnerTrans/ModE-Sim_set_1420-1_to_3_ensmean_VITEFnorth-ZonMean_1420-1849_seasonal.nc"
 system(cdo.cmd)
 
@@ -48,6 +53,8 @@ data.g <- melt(EneTrans.n.s, id="lat") %>% magrittr::set_colnames(., c("lat", "D
     value <- value /1e9
   } )
 
+Volc <- Volc %>% subset(., Date >=1780 & Date <=1850)
+
 # plotting world zonal mean ----
 range <- max( abs(min(data.g$value)), max(data.g$value))
 at.m <- seq(-range,range,length.out = 11) %>% round(.,2); at.m.v <- (at.m[-length(at.m)] - at.m[-1])/2 + at.m[-1]
@@ -66,12 +73,13 @@ at.m <- seq(-range,range,length.out = 11) %>% round(.,2); at.m.v <- (at.m[-lengt
 ggplot() + 
   facet_wrap(. ~ Season)+
   geom_tile(data= data.g2, aes(Date,lat, fill=value))+
-  geom_hline(yintercept = c(0,5,10), linewidth=0.2)+
+  geom_vline(data= Volc, aes(xintercept=Date, linetype=variable), col="#a65628", show.legend = FALSE, alpha=0.4)+
+  # geom_hline(yintercept = c(0,5,10), linewidth=0.2)+
   scale_fill_stepsn(colours=brewer.pal(10,"PRGn"), breaks=at.m,
                     limits=c(min(at.m),max(at.m)), guide=guide_colorsteps(barwidth=unit(10,"cm")),
                     name="VITEFnorth\n[G W/m]")+
   scale_y_continuous(expand = c(0.01,0.01), breaks = seq(-90,90,by=15))+
-  # scale_x_continuous(expand = c(0.01,0.01), breaks= seq(1940,2020,by=10))+
+  scale_x_continuous(expand = c(0.01,0.01), breaks= seq(1780,1850,by=10))+
   labs(title = "Vertical integral Northward total energy flux, world zonal mean ", y="Latitude [°]")+
   theme_bw()+theme(legend.position = "bottom", 
                    axis.title = element_text(size=12), axis.text = element_text(size=12), strip.text = element_text(size=12),axis.title.x = element_blank(),
